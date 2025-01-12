@@ -1,20 +1,20 @@
 {
   "app": {
-    "privateIp": "172.31.31.155:3001",
+    "privateIp": "${APP_PRIVATE_IP}",
+    "publicIp": "${APP_PUBLIC_IP}",
     "address": "0.0.0.0",
     "port": 3001,
     "websocketPort": 8000,
-    "name": "CYNXHOST",
-    "debug": false,
-    "key": "imakey"
+    "name": "CYNXHOST-AGENT",
+    "debug": false
   },
   "central": {
-    "privateIp": "127.0.0.1",
-    "publicIp": "127.0.0.1",
-    "port": 3000
+    "privateIp": "${CENTRAL_PRIVATE_IP}",
+    "publicIp": "${CENTRAL_PUBLIC_IP}",
+    "port": "${CENTRAL_PORT}"
   },
   "log": {
-    "minecraftLogFilePath": "/home/cynxhost/node/cynxhost-agent/output.log"
+    "minecraftLogFilePath": "/home/cynxhost/cynxhost-agent/output.log"
   },
   "router": {
     "default": "/api/v1/"
@@ -43,7 +43,7 @@
   "security": {
     "jwt": {
       "secret": "${JWT_SECRET}",
-      "expiresIn": "1h"
+      "expiresInHour": 72
     },
     "cors": {
       "enabled": true,

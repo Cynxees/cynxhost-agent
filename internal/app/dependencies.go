@@ -45,7 +45,7 @@ func NewDependencies(configPath string) *Dependencies {
 	awsManager := dependencies.NewAWSClient(config.Aws.AccessKeyId, config.Aws.AccessKeySecret)
 
 	logger.Infoln("Connecting to JWT")
-	jwtManager := dependencies.NewJWTManager(config.App.Key, time.Hour*24)
+	jwtManager := dependencies.NewJWTManager(config.Security.JWT.Secret, time.Hour*time.Duration(config.Security.JWT.ExpiresInHour))
 
 	logger.Infoln("Initializing OS Manager")
 	osManager := dependencies.NewOsManager()

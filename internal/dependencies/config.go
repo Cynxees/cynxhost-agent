@@ -13,7 +13,6 @@ type Config struct {
 		Name          string `mapstructure:"name"`
 		Address       string `mapstructure:"address"`
 		PrivateIp     string `mapstructure:"privateIp"`
-		Key           string `mapstructure:"key"`
 		Port          int    `mapstructure:"port"`
 		WebsocketPort int    `mapstructure:"websocketPort"`
 		Debug         bool   `mapstructure:"debug"`
@@ -22,7 +21,7 @@ type Config struct {
 	Central struct {
 		PrivateIp string `mapstructure:"privateIp"`
 		PublicIp  string `mapstructure:"publicIp"`
-		Port      int    `mapstructure:"port"`
+		Port      string `mapstructure:"port"`
 	} `mapstructure:"central"`
 
 	Log struct {
@@ -82,8 +81,8 @@ type Config struct {
 
 	Security struct {
 		JWT struct {
-			Secret    string `mapstructure:"secret"`
-			ExpiresIn string `mapstructure:"expiresIn"`
+			Secret        string `mapstructure:"secret"`
+			ExpiresInHour int    `mapstructure:"expiresInHour"`
 		} `mapstructure:"jwt"`
 
 		CORS struct {
