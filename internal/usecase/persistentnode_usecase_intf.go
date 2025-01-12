@@ -7,5 +7,6 @@ import (
 )
 
 type PersistentNodeUseCase interface {
-	RunPersistentNodeScript(ctx context.Context, req request.RunPersistentNodeScriptRequest, resp *response.APIResponse)
+	RunPersistentNodeTemplateScript(ctx context.Context, req request.RunPersistentNodeTemplateScriptRequest, resp *response.APIResponse)
+	
 }

@@ -21,6 +21,7 @@ type Dependencies struct {
 	AWSClient      *dependencies.AWSClient
 
 	JWTManager *dependencies.JWTManager
+	OSManager  *dependencies.OSManager
 }
 
 func NewDependencies(configPath string) *Dependencies {
@@ -46,6 +47,9 @@ func NewDependencies(configPath string) *Dependencies {
 	logger.Infoln("Connecting to JWT")
 	jwtManager := dependencies.NewJWTManager(config.App.Key, time.Hour*24)
 
+	logger.Infoln("Initializing OS Manager")
+	osManager := dependencies.NewOsManager()
+
 	logger.Infoln("Connecting to Database")
 	databaseClient, err := dependencies.NewDatabaseClient(config)
 	if err != nil {
@@ -61,5 +65,6 @@ func NewDependencies(configPath string) *Dependencies {
 		Logger:         logger,
 		AWSClient:      awsManager,
 		JWTManager:     jwtManager,
+		OSManager:      osManager,
 	}
 }

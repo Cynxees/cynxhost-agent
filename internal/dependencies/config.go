@@ -10,12 +10,13 @@ import (
 
 type Config struct {
 	App struct {
-		Name      string `mapstructure:"name"`
-		Address   string `mapstructure:"address"`
-		PrivateIp string `mapstructure:"privateIp"`
-		Key       string `mapstructure:"key"`
-		Port      int    `mapstructure:"port"`
-		Debug     bool   `mapstructure:"debug"`
+		Name          string `mapstructure:"name"`
+		Address       string `mapstructure:"address"`
+		PrivateIp     string `mapstructure:"privateIp"`
+		Key           string `mapstructure:"key"`
+		Port          int    `mapstructure:"port"`
+		WebsocketPort int    `mapstructure:"websocketPort"`
+		Debug         bool   `mapstructure:"debug"`
 	} `mapstructure:"app"`
 
 	Central struct {
@@ -23,6 +24,10 @@ type Config struct {
 		PublicIp  string `mapstructure:"publicIp"`
 		Port      int    `mapstructure:"port"`
 	} `mapstructure:"central"`
+
+	Log struct {
+		MinecraftLogFilePath string `mapstructure:"minecraftLogFilePath"`
+	}
 
 	Router struct {
 		Default string `mapstructure:"default"`

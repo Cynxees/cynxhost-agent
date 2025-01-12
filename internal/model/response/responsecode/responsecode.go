@@ -19,6 +19,7 @@ const (
 	CodeAWSError      ResponseCode = "AWSERR"
 	CodeEC2Error      ResponseCode = "EC2ERR"
 	CodeRCONError     ResponseCode = "RCONERR"
+	CodeOsError       ResponseCode = "OSERR"
 
 	// DB Error
 	CodeTblServerTemplateError ResponseCode = "TBLSTE"

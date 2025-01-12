@@ -2,20 +2,24 @@ package controller
 
 import (
 	"cynxhostagent/internal/app"
+	"cynxhostagent/internal/controller/persistentnodecontroller"
 	"cynxhostagent/internal/controller/usercontroller"
 	"cynxhostagent/internal/middleware"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/gorilla/websocket"
 	"github.com/rs/cors"
 	"go.elastic.co/apm/module/apmhttp/v2"
 )
 
 type HttpServer struct {
-	*http.Server
+	http *http.Server
+	ws   *http.Server
 }
 
 func NewHttpServer(app *app.App) (*HttpServer, error) {
@@ -27,6 +31,8 @@ func NewHttpServer(app *app.App) (*HttpServer, error) {
 	})
 
 	r := mux.NewRouter()
+	wsRouter := mux.NewRouter()
+
 	r.Use(middleware.LoggingMiddleware)
 	routerPath := app.Dependencies.Config.Router.Default
 	debug := app.Dependencies.Config.App.Debug
@@ -40,10 +46,30 @@ func NewHttpServer(app *app.App) (*HttpServer, error) {
 		return r.HandleFunc(routerPath+path, wrappedHandler).Methods("POST", "GET")
 	}
 
+	handleWebsocketFunc := func(path string, handler func(conn *websocket.Conn)) *mux.Route {
+		fmt.Println("Registering websocket handler for", routerPath+path)
+		return wsRouter.HandleFunc(routerPath+path, func(w http.ResponseWriter, r *http.Request) {
+			conn, err := upgrader.Upgrade(w, r, nil)
+			if err != nil {
+				app.Dependencies.Logger.Errorf("Failed to upgrade connection: %v", err)
+				return
+			}
+			defer conn.Close()
+			handler(conn)
+		})
+	}
+
 	userController := usercontroller.New(app.Usecases.UserUseCase, app.Dependencies.Validator)
+	persistentNodeController := persistentnodecontroller.New(app.Usecases.PersistentNodeUseCase, app.Dependencies.Validator, app.Dependencies.Config)
 
 	// User
 	handleRouterFunc("user/bypass-login", userController.BypassLoginUser, false)
+
+	// Persistent Node
+	handleRouterFunc("persistent-node/run-template-script", persistentNodeController.RunPersistentNodeTemplateScript, true)
+
+	// Websocket
+	handleWebsocketFunc("ws/persistent-node/logs", persistentNodeController.GetPersistentNodeRealTimeLogs)
 
 	r.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -55,7 +81,7 @@ func NewHttpServer(app *app.App) (*HttpServer, error) {
 	corsHandler := c.Handler(r)
 
 	address := app.Dependencies.Config.App.Address + ":" + strconv.Itoa(app.Dependencies.Config.App.Port)
-	app.Dependencies.Logger.Infof("Starting http server on %s\n", address)
+	app.Dependencies.Logger.Infof("Starting http server on %s", address)
 
 	srv := &http.Server{
 		Addr:         address,
@@ -65,11 +91,28 @@ func NewHttpServer(app *app.App) (*HttpServer, error) {
 		Handler:      apmhttp.Wrap(corsHandler),
 	}
 
-	return &HttpServer{srv}, nil
+	wsSrv := &http.Server{
+		Addr:    app.Dependencies.Config.App.Address + ":" + strconv.Itoa(app.Dependencies.Config.App.WebsocketPort),
+		Handler: wsRouter,
+	}
+
+	return &HttpServer{
+		http: srv,
+		ws:   wsSrv,
+	}, nil
+}
+
+var upgrader = websocket.Upgrader{
+	CheckOrigin: func(r *http.Request) bool {
+		// Add origin check logic if needed
+		return true
+	},
 }
 
 func (s *HttpServer) Start() error {
-	return s.ListenAndServe()
+
+	go s.ws.ListenAndServe()
+	return s.http.ListenAndServe()
 }
 
 func (s *HttpServer) Stop() error {
