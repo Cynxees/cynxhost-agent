@@ -10,12 +10,14 @@ import (
 
 type Config struct {
 	App struct {
-		Name          string `mapstructure:"name"`
-		Address       string `mapstructure:"address"`
-		PrivateIp     string `mapstructure:"privateIp"`
-		Port          int    `mapstructure:"port"`
-		WebsocketPort int    `mapstructure:"websocketPort"`
-		Debug         bool   `mapstructure:"debug"`
+		Name             string `mapstructure:"name"`
+		Address          string `mapstructure:"address"`
+		PrivateIp        string `mapstructure:"privateIp"`
+		PublicIp         string `mapstructure:"publicIp"`
+		PersistentNodeId string `mapstructure:"persistentNodeId"`
+		Port             int    `mapstructure:"port"`
+		WebsocketPort    int    `mapstructure:"websocketPort"`
+		Debug            bool   `mapstructure:"debug"`
 	} `mapstructure:"app"`
 
 	Central struct {
