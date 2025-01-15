@@ -28,6 +28,10 @@ func NewApp(ctx context.Context, configPath string) (*App, error) {
 	logger.Infoln("Initializing Usecases")
 	usecases := NewUseCases(repos, dependencies)
 
+	logger.Infoln("Loading Config")
+	newConfig := dependencies.Config.LazyLoadConfig(repos.TblInstance, repos.TblPersistentNode)
+	dependencies.Config = &newConfig
+
 	logger.Infoln("App initialized")
 	return &App{
 		Dependencies: dependencies,

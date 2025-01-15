@@ -2,7 +2,6 @@ package param
 
 import (
 	"context"
-	"cynxhostagent/internal/model/entity/param"
 	"cynxhostagent/internal/repository/database"
 	"encoding/json"
 	"time"
@@ -11,9 +10,6 @@ import (
 )
 
 type params struct {
-	ParamAwsNodeId       param.ParamAwsNodeId
-	ParamAwsNodeScript   param.ParamAwsNodeScript
-	ParamAwsLaunchScript string
 }
 
 var StaticParam params
@@ -24,20 +20,7 @@ type paramDetail struct {
 }
 
 func getParamDetailList(staticParam *params) map[string]paramDetail {
-	return map[string]paramDetail{
-		"AWS_NODE_ID": {
-			IsObject:             true,
-			ParamObjectReference: &staticParam.ParamAwsNodeId,
-		},
-		"AWS_NODE_SCRIPT": {
-			IsObject:             true,
-			ParamObjectReference: &staticParam.ParamAwsNodeScript,
-		},
-		"AWS_LAUNCH_SCRIPT": {
-			IsObject:             false,
-			ParamObjectReference: &staticParam.ParamAwsLaunchScript,
-		},
-	}
+	return map[string]paramDetail{}
 }
 
 func SetupStaticParam(tblParam database.TblParameter, log *logrus.Logger) {

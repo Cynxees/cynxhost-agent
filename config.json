@@ -6,8 +6,7 @@
     "port": 3001,
     "websocketPort": 8000,
     "name": "CYNXHOST-AGENT",
-    "debug": false,
-    "persistentNodeId": "${PERSISTENT_NODE_ID}"
+    "debug": false
   },
   "central": {
     "privateIp": "${CENTRAL_PRIVATE_IP}",
@@ -22,7 +21,7 @@
   },
   "database": {
     "mysql": {
-      "host": "47.129.250.117",
+      "host": "${CENTRAL_PUBLIC_IP}",
       "port": 3306,
       "database": "cynxhost",
       "username": "cynx",

@@ -1,8 +1,11 @@
 package dependencies
 
 import (
+	"context"
+	"cynxhostagent/internal/repository/database"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/spf13/viper"
@@ -14,10 +17,10 @@ type Config struct {
 		Address          string `mapstructure:"address"`
 		PrivateIp        string `mapstructure:"privateIp"`
 		PublicIp         string `mapstructure:"publicIp"`
-		PersistentNodeId string `mapstructure:"persistentNodeId"`
 		Port             int    `mapstructure:"port"`
 		WebsocketPort    int    `mapstructure:"websocketPort"`
 		Debug            bool   `mapstructure:"debug"`
+		PersistentNodeId *int   `mapstructure:"persistentNodeId"`
 	} `mapstructure:"app"`
 
 	Central struct {
@@ -92,6 +95,32 @@ type Config struct {
 			Origin  string `mapstructure:"origin"`
 		} `mapstructure:"cors"`
 	} `mapstructure:"security"`
+}
+
+func (config *Config) LazyLoadConfig(tblInstance database.TblInstance, tblPersistentNode database.TblPersistentNode) Config {
+
+	ctx := context.Background()
+	ctx, instance, err := tblInstance.GetInstances(ctx, "private_ip", config.App.PrivateIp)
+	if err != nil {
+		panic(err)
+	}
+
+	if len(instance) == 0 {
+		panic("Instance not found")
+	}
+
+	ctx, persistentNode, err := tblPersistentNode.GetPersistentNodes(ctx, "instance_id", strconv.Itoa(instance[0].Id))
+	if err != nil {
+		panic(err)
+	}
+
+	if len(persistentNode) == 0 {
+		panic("Persistent node not found")
+	}
+
+	config.App.PersistentNodeId = &persistentNode[0].Id
+
+	return *config
 }
 
 func LoadConfig(path string) (*Config, error) {
