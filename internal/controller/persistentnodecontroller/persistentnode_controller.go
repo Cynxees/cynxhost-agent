@@ -49,6 +49,8 @@ func (controller *PersistentNodeController) RunPersistentNodeTemplateScript(w ht
 		return ctx, apiResponse
 	}
 
+	requestBody.PersistentNodeId = *controller.config.App.PersistentNodeId
+
 	requestBody.SessionUser = sessionUser
 	if err := helper.DecodeAndValidateRequest(r, &requestBody, controller.validator); err != nil {
 		apiResponse.Code = responsecode.CodeValidationError
