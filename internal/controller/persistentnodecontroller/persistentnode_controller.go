@@ -66,7 +66,7 @@ func (controller *PersistentNodeController) RunPersistentNodeTemplateScript(w ht
 func (controller *PersistentNodeController) GetPersistentNodeRealTimeLogs(conn *websocket.Conn) {
 
 	// Path to the log file (update with your file's path)
-	logFilePath := controller.config.Log.MinecraftLogFilePath
+	logFilePath := controller.config.Files.MinecraftLog
 
 	// Open the log file for reading using os.Open, but treat it as an io.Reader
 	file, err := os.Open(logFilePath)
@@ -129,4 +129,48 @@ func (controller *PersistentNodeController) GetPersistentNodeRealTimeLogs(conn *
 			file.Seek(0, io.SeekCurrent)
 		}
 	}
+}
+
+func (controller *PersistentNodeController) SendCommand(w http.ResponseWriter, r *http.Request) (context.Context, response.APIResponse) {
+	var requestBody request.SendCommandRequest
+	var apiResponse response.APIResponse
+
+	ctx := r.Context()
+
+	if err := helper.DecodeAndValidateRequest(r, &requestBody, controller.validator); err != nil {
+		apiResponse.Code = responsecode.CodeValidationError
+		apiResponse.Error = err.Error()
+		return ctx, apiResponse
+	}
+
+	controller.persistentNodeUsecase.SendCommand(ctx, requestBody, &apiResponse)
+
+	return ctx, apiResponse
+}
+
+func (controller *PersistentNodeController) GetServerProperties(w http.ResponseWriter, r *http.Request) (context.Context, response.APIResponse) {
+	var apiResponse response.APIResponse
+
+	ctx := r.Context()
+
+	controller.persistentNodeUsecase.GetServerProperties(ctx, &apiResponse)
+
+	return ctx, apiResponse
+}
+
+func (controller *PersistentNodeController) SetServerProperties(w http.ResponseWriter, r *http.Request) (context.Context, response.APIResponse) {
+	var requestBody request.SetServerPropertiesRequest
+	var apiResponse response.APIResponse
+
+	ctx := r.Context()
+
+	if err := helper.DecodeAndValidateRequest(r, &requestBody, controller.validator); err != nil {
+		apiResponse.Code = responsecode.CodeValidationError
+		apiResponse.Error = err.Error()
+		return ctx, apiResponse
+	}
+
+	controller.persistentNodeUsecase.SetServerProperties(ctx, requestBody, &apiResponse)
+
+	return ctx, apiResponse
 }

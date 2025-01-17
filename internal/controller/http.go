@@ -68,6 +68,12 @@ func NewHttpServer(app *app.App) (*HttpServer, error) {
 	// Persistent Node
 	handleRouterFunc("persistent-node/run-template-script", persistentNodeController.RunPersistentNodeTemplateScript, true)
 
+	// Dashboard
+	handleRouterFunc("persistent-node/dashboard/send-command", persistentNodeController.SendCommand, true)
+
+	handleRouterFunc("persistent-node/dashboard/properties/get", persistentNodeController.GetServerProperties, true)
+	handleRouterFunc("persistent-node/dashboard/properties/set", persistentNodeController.SetServerProperties, true)
+
 	// Websocket
 	handleWebsocketFunc("ws/persistent-node/logs", persistentNodeController.GetPersistentNodeRealTimeLogs)
 

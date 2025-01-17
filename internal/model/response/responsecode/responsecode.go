@@ -4,8 +4,11 @@ type ResponseCode string
 
 const (
 
+	// General
+	CodeSuccess ResponseCode = "00"
+	CodeFailed  ResponseCode = "XX"
+
 	// Expected Error
-	CodeSuccess             ResponseCode = "SU"
 	CodeValidationError     ResponseCode = "VE"
 	CodeAuthenticationError ResponseCode = "AU"
 	CodeNotAllowed          ResponseCode = "NA"
@@ -20,6 +23,7 @@ const (
 	CodeEC2Error      ResponseCode = "EC2ERR"
 	CodeRCONError     ResponseCode = "RCONERR"
 	CodeOsError       ResponseCode = "OSERR"
+	CodeTmuxError     ResponseCode = "TMXERR"
 
 	// DB Error
 	CodeTblServerTemplateError ResponseCode = "TBLSTE"

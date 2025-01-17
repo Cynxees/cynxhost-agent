@@ -29,8 +29,13 @@ type Config struct {
 		Port      string `mapstructure:"port"`
 	} `mapstructure:"central"`
 
-	Log struct {
-		MinecraftLogFilePath string `mapstructure:"minecraftLogFilePath"`
+	Files struct {
+		MinecraftLog              string `mapstructure:"minecraftLog"`
+		MinecraftServerProperties string `mapstructure:"minecraftServerProperties"`
+	}
+
+	Tmux struct {
+		SessionName string `mapstructure:"sessionName"`
 	}
 
 	Router struct {

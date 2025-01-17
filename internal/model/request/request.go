@@ -1,6 +1,9 @@
 package request
 
-import contextmodel "cynxhostagent/internal/model/context"
+import (
+	contextmodel "cynxhostagent/internal/model/context"
+	"cynxhostagent/internal/model/entity"
+)
 
 type PaginateRequest struct {
 	Page int `json:"page" validate:"required"`
@@ -24,4 +27,12 @@ type GetPersistentNodeRealTimeLogsRequest struct {
 	SessionUser contextmodel.User `validate:"required"`
 
 	PersistentNodeId int `json:"persistent_node_id" validate:"required"`
+}
+
+type SendCommandRequest struct {
+	Command string `json:"command" validate:"required"`
+}
+
+type SetServerPropertiesRequest struct {
+	ServerProperties []entity.ServerProperty `json:"server_properties" validate:"required"`
 }

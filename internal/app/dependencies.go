@@ -20,8 +20,9 @@ type Dependencies struct {
 	DatabaseClient *dependencies.DatabaseClient
 	AWSClient      *dependencies.AWSClient
 
-	JWTManager *dependencies.JWTManager
-	OSManager  *dependencies.OSManager
+	JWTManager  *dependencies.JWTManager
+	OSManager   *dependencies.OSManager
+	TmuxManager *dependencies.TmuxManager
 }
 
 func NewDependencies(configPath string) *Dependencies {
@@ -50,6 +51,9 @@ func NewDependencies(configPath string) *Dependencies {
 	logger.Infoln("Initializing OS Manager")
 	osManager := dependencies.NewOsManager()
 
+	logger.Infoln("Initializing Tmux Manager")
+	tmuxManager := dependencies.NewTmuxManager()
+
 	logger.Infoln("Connecting to Database")
 	databaseClient, err := dependencies.NewDatabaseClient(config)
 	if err != nil {
@@ -66,5 +70,6 @@ func NewDependencies(configPath string) *Dependencies {
 		AWSClient:      awsManager,
 		JWTManager:     jwtManager,
 		OSManager:      osManager,
+		TmuxManager:    tmuxManager,
 	}
 }

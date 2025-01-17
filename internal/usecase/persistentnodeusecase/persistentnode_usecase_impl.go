@@ -9,6 +9,7 @@ import (
 	"cynxhostagent/internal/model/response/responsecode"
 	"cynxhostagent/internal/repository/database"
 	"cynxhostagent/internal/usecase"
+	"fmt"
 	"strconv"
 
 	"github.com/sirupsen/logrus"
@@ -21,13 +22,14 @@ type PersistentNodeUseCaseImpl struct {
 	tblStorage        database.TblStorage
 	tblServerTemplate database.TblServerTemplate
 
-	awsClient *dependencies.AWSClient
-	log       *logrus.Logger
-	config    *dependencies.Config
-	osManager *dependencies.OSManager
+	awsClient   *dependencies.AWSClient
+	log         *logrus.Logger
+	config      *dependencies.Config
+	osManager   *dependencies.OSManager
+	tmuxManager *dependencies.TmuxManager
 }
 
-func New(tblPersistentNode database.TblPersistentNode, tblInstance database.TblInstance, tblInstanceType database.TblInstanceType, tblStorage database.TblStorage, tblServerTemplate database.TblServerTemplate, awsClient *dependencies.AWSClient, logger *logrus.Logger, config *dependencies.Config, osManager *dependencies.OSManager) usecase.PersistentNodeUseCase {
+func New(tblPersistentNode database.TblPersistentNode, tblInstance database.TblInstance, tblInstanceType database.TblInstanceType, tblStorage database.TblStorage, tblServerTemplate database.TblServerTemplate, awsClient *dependencies.AWSClient, logger *logrus.Logger, config *dependencies.Config, osManager *dependencies.OSManager, tmuxManager *dependencies.TmuxManager) usecase.PersistentNodeUseCase {
 
 	return &PersistentNodeUseCaseImpl{
 		tblPersistentNode: tblPersistentNode,
@@ -36,10 +38,11 @@ func New(tblPersistentNode database.TblPersistentNode, tblInstance database.TblI
 		tblInstance:       tblInstance,
 		tblInstanceType:   tblInstanceType,
 
-		awsClient: awsClient,
-		log:       logger,
-		config:    config,
-		osManager: osManager,
+		awsClient:   awsClient,
+		log:         logger,
+		config:      config,
+		osManager:   osManager,
+		tmuxManager: tmuxManager,
 	}
 }
 
@@ -110,6 +113,37 @@ func (usecase *PersistentNodeUseCaseImpl) RunPersistentNodeTemplateScript(ctx co
 	resp.Code = responsecode.CodeSuccess
 }
 
-func (usecase *PersistentNodeUseCaseImpl) GetPersistentNodeRealTimeLogs(ctx context.Context, req request.GetPersistentNodeRealTimeLogsRequest, resp *response.APIResponse) {
-	
+func (usecase *PersistentNodeUseCaseImpl) SendCommand(ctx context.Context, req request.SendCommandRequest, resp *response.APIResponse) {
+
+	err := usecase.tmuxManager.SendCommand(usecase.config.Tmux.SessionName, req.Command)
+
+	if err != nil {
+		resp.Code = responsecode.CodeTmuxError
+		resp.Error = "Error running script " + err.Error()
+		return
+	}
+
+	resp.Code = responsecode.CodeSuccess
+}
+
+func (usecase *PersistentNodeUseCaseImpl) GetServerProperties(ctx context.Context, resp *response.APIResponse) {
+	properties, err := usecase.osManager.ReadServerProperties(usecase.config.Files.MinecraftServerProperties)
+	if err != nil {
+		resp.Error = fmt.Sprintf("Error reading server.properties: %v", err)
+		resp.Code = responsecode.CodeFailed
+		return
+	}
+	resp.Code = responsecode.CodeSuccess
+	resp.Data = properties
+}
+
+func (usecase *PersistentNodeUseCaseImpl) SetServerProperties(ctx context.Context, req request.SetServerPropertiesRequest, resp *response.APIResponse) {
+
+	err := usecase.osManager.SetServerProperties(usecase.config.Files.MinecraftServerProperties, req.ServerProperties)
+	if err != nil {
+		resp.Error = fmt.Sprintf("Error reading server.properties: %v", err)
+		resp.Code = responsecode.CodeFailed
+		return
+	}
+	resp.Code = responsecode.CodeSuccess
 }

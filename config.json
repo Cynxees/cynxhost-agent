@@ -13,8 +13,12 @@
     "publicIp": "${CENTRAL_PUBLIC_IP}",
     "port": "${CENTRAL_PORT}"
   },
-  "log": {
-    "minecraftLogFilePath": "/home/cynxhost/cynxhost-agent/output.log"
+  "files": {
+    "minecraftLogFilePath": "/home/cynxhost/cynxhost-agent/output.log",
+    "minecraftServerProperties": "/home/derwin/personal/node/server.properties"
+  },
+  "tmux": {
+    "sessionName": "cynxhost-node"
   },
   "router": {
     "default": "/api/v1/"
