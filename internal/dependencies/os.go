@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"cynxhostagent/internal/model/entity"
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"strings"
@@ -32,6 +33,8 @@ func (manager *OSManager) RunBashScript(script string) error {
 }
 
 func (*OSManager) ReadServerProperties(filePath string) ([]entity.ServerProperty, error) {
+
+	log.Println("Reading server.properties from: ", filePath)
 	file, err := os.Open(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open server.properties: %w", err)

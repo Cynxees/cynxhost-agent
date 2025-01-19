@@ -15,7 +15,7 @@
   },
   "files": {
     "minecraftLogFilePath": "/home/cynxhost/cynxhost-agent/output.log",
-    "minecraftServerProperties": "/home/derwin/personal/node/server.properties"
+    "minecraftServerProperties": "/home/cynxhost/node/server.properties"
   },
   "tmux": {
     "sessionName": "cynxhost-node"

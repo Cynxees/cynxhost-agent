@@ -32,7 +32,7 @@ type Config struct {
 	Files struct {
 		MinecraftLog              string `mapstructure:"minecraftLog"`
 		MinecraftServerProperties string `mapstructure:"minecraftServerProperties"`
-	}
+	} `mapstructure:"files"`
 
 	Tmux struct {
 		SessionName string `mapstructure:"sessionName"`
