@@ -2,6 +2,7 @@ package app
 
 import (
 	"cynxhostagent/internal/dependencies"
+	"cynxhostagent/internal/repository/micro/cynxhostcentral"
 	"log"
 	"time"
 
@@ -19,6 +20,8 @@ type Dependencies struct {
 	RedisClient    *redis.Client
 	DatabaseClient *dependencies.DatabaseClient
 	AWSClient      *dependencies.AWSClient
+
+	CynxhostCentral *cynxhostcentral.CynxhostCentral
 
 	JWTManager  *dependencies.JWTManager
 	OSManager   *dependencies.OSManager
@@ -60,16 +63,20 @@ func NewDependencies(configPath string) *Dependencies {
 		logger.Fatalln("Failed to connect to database: ", err)
 	}
 
+	logger.Infoln("Connecting to Cynxhost Central")
+	cynxhostCentral := cynxhostcentral.New(&config.Central)
+
 	logger.Infoln("Dependencies initialized")
 	return &Dependencies{
-		Config:         config,
-		DatabaseClient: databaseClient,
-		Validator:      validator,
-		RedisClient:    redis,
-		Logger:         logger,
-		AWSClient:      awsManager,
-		JWTManager:     jwtManager,
-		OSManager:      osManager,
-		TmuxManager:    tmuxManager,
+		Config:          config,
+		DatabaseClient:  databaseClient,
+		Validator:       validator,
+		RedisClient:     redis,
+		Logger:          logger,
+		AWSClient:       awsManager,
+		JWTManager:      jwtManager,
+		OSManager:       osManager,
+		TmuxManager:     tmuxManager,
+		CynxhostCentral: cynxhostCentral,
 	}
 }

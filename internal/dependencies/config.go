@@ -23,11 +23,7 @@ type Config struct {
 		PersistentNodeId *int   `mapstructure:"persistentNodeId"`
 	} `mapstructure:"app"`
 
-	Central struct {
-		PrivateIp string `mapstructure:"privateIp"`
-		PublicIp  string `mapstructure:"publicIp"`
-		Port      string `mapstructure:"port"`
-	} `mapstructure:"central"`
+	Central ConfigCentral `mapstructure:"central"`
 
 	Files struct {
 		MinecraftLog              string `mapstructure:"minecraftLog"`
@@ -100,6 +96,12 @@ type Config struct {
 			Origin  string `mapstructure:"origin"`
 		} `mapstructure:"cors"`
 	} `mapstructure:"security"`
+}
+
+type ConfigCentral struct {
+	PrivateIp string `mapstructure:"privateIp"`
+	PublicIp  string `mapstructure:"publicIp"`
+	Port      string `mapstructure:"port"`
 }
 
 func (config *Config) LazyLoadConfig(tblInstance database.TblInstance, tblPersistentNode database.TblPersistentNode) Config {

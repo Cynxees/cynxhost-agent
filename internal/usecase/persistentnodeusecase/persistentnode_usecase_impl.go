@@ -8,6 +8,7 @@ import (
 	"cynxhostagent/internal/model/response"
 	"cynxhostagent/internal/model/response/responsecode"
 	"cynxhostagent/internal/repository/database"
+	"cynxhostagent/internal/repository/micro/cynxhostcentral"
 	"cynxhostagent/internal/usecase"
 	"fmt"
 	"strconv"
@@ -22,14 +23,16 @@ type PersistentNodeUseCaseImpl struct {
 	tblStorage        database.TblStorage
 	tblServerTemplate database.TblServerTemplate
 
-	awsClient   *dependencies.AWSClient
+	awsClient       *dependencies.AWSClient
+	cynxhostcentral *cynxhostcentral.CynxhostCentral
+
 	log         *logrus.Logger
 	config      *dependencies.Config
 	osManager   *dependencies.OSManager
 	tmuxManager *dependencies.TmuxManager
 }
 
-func New(tblPersistentNode database.TblPersistentNode, tblInstance database.TblInstance, tblInstanceType database.TblInstanceType, tblStorage database.TblStorage, tblServerTemplate database.TblServerTemplate, awsClient *dependencies.AWSClient, logger *logrus.Logger, config *dependencies.Config, osManager *dependencies.OSManager, tmuxManager *dependencies.TmuxManager) usecase.PersistentNodeUseCase {
+func New(tblPersistentNode database.TblPersistentNode, tblInstance database.TblInstance, tblInstanceType database.TblInstanceType, tblStorage database.TblStorage, tblServerTemplate database.TblServerTemplate, awsClient *dependencies.AWSClient, logger *logrus.Logger, config *dependencies.Config, osManager *dependencies.OSManager, tmuxManager *dependencies.TmuxManager, cynxhostCentral *cynxhostcentral.CynxhostCentral) usecase.PersistentNodeUseCase {
 
 	return &PersistentNodeUseCaseImpl{
 		tblPersistentNode: tblPersistentNode,
@@ -38,7 +41,9 @@ func New(tblPersistentNode database.TblPersistentNode, tblInstance database.TblI
 		tblInstance:       tblInstance,
 		tblInstanceType:   tblInstanceType,
 
-		awsClient:   awsClient,
+		awsClient:       awsClient,
+		cynxhostcentral: cynxhostCentral,
+
 		log:         logger,
 		config:      config,
 		osManager:   osManager,
@@ -108,6 +113,17 @@ func (usecase *PersistentNodeUseCaseImpl) RunPersistentNodeTemplateScript(ctx co
 		resp.Code = responsecode.CodeOsError
 		resp.Error = "Error running script " + err.Error()
 		return
+	}
+
+	// If shutdown, Call callback in central
+	if req.ScriptType == string(types.PersistentNodeStatusShutdown) {
+
+		err = usecase.cynxhostcentral.CallShutdownCallback()
+		if err != nil {
+			resp.Code = responsecode.CodeCentralError
+			resp.Error = "Error calling central " + err.Error()
+			return
+		}
 	}
 
 	resp.Code = responsecode.CodeSuccess
