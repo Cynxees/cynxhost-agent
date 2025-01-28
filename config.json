@@ -13,12 +13,19 @@
     "publicIp": "${CENTRAL_PUBLIC_IP}",
     "port": "${CENTRAL_PORT}"
   },
-  "files": {
-    "minecraftLogFilePath": "/home/cynxhost/cynxhost-agent/output.log",
-    "minecraftServerProperties": "/home/cynxhost/node/server.properties"
-  },
-  "tmux": {
-    "sessionName": "cynxhost-node"
+  "docker": {
+    "containerName": "cynxhost-container",
+    "host": "cynx.buzz",
+    "sshPort": 22,
+    "username": "cynxhost",
+    "password": "cynxh0stpass",
+    "tmux": {
+      "sessionName": "cynxhost-node"
+    },
+    "files": {
+      "minecraftLogFilePath": "/home/cynxhost/cynxhost-agent/output.log",
+      "minecraftServerProperties": "/home/cynxhost/node/server.properties"
+    }
   },
   "router": {
     "default": "/api/v1/"

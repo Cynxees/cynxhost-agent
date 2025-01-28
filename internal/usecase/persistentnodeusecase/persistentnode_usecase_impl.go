@@ -7,10 +7,12 @@ import (
 	"cynxhostagent/internal/model/request"
 	"cynxhostagent/internal/model/response"
 	"cynxhostagent/internal/model/response/responsecode"
+	"cynxhostagent/internal/model/response/responsedata"
 	"cynxhostagent/internal/repository/database"
 	"cynxhostagent/internal/repository/micro/cynxhostcentral"
 	"cynxhostagent/internal/usecase"
 	"fmt"
+	"math/rand/v2"
 	"strconv"
 
 	"github.com/sirupsen/logrus"
@@ -26,13 +28,13 @@ type PersistentNodeUseCaseImpl struct {
 	awsClient       *dependencies.AWSClient
 	cynxhostcentral *cynxhostcentral.CynxhostCentral
 
-	log         *logrus.Logger
-	config      *dependencies.Config
-	osManager   *dependencies.OSManager
-	tmuxManager *dependencies.TmuxManager
+	log           *logrus.Logger
+	config        *dependencies.Config
+	osManager     *dependencies.OSManager
+	dockerManager *dependencies.DockerManager
 }
 
-func New(tblPersistentNode database.TblPersistentNode, tblInstance database.TblInstance, tblInstanceType database.TblInstanceType, tblStorage database.TblStorage, tblServerTemplate database.TblServerTemplate, awsClient *dependencies.AWSClient, logger *logrus.Logger, config *dependencies.Config, osManager *dependencies.OSManager, tmuxManager *dependencies.TmuxManager, cynxhostCentral *cynxhostcentral.CynxhostCentral) usecase.PersistentNodeUseCase {
+func New(tblPersistentNode database.TblPersistentNode, tblInstance database.TblInstance, tblInstanceType database.TblInstanceType, tblStorage database.TblStorage, tblServerTemplate database.TblServerTemplate, awsClient *dependencies.AWSClient, logger *logrus.Logger, config *dependencies.Config, osManager *dependencies.OSManager, dockerManager *dependencies.DockerManager, cynxhostCentral *cynxhostcentral.CynxhostCentral) usecase.PersistentNodeUseCase {
 
 	return &PersistentNodeUseCaseImpl{
 		tblPersistentNode: tblPersistentNode,
@@ -44,10 +46,10 @@ func New(tblPersistentNode database.TblPersistentNode, tblInstance database.TblI
 		awsClient:       awsClient,
 		cynxhostcentral: cynxhostCentral,
 
-		log:         logger,
-		config:      config,
-		osManager:   osManager,
-		tmuxManager: tmuxManager,
+		log:           logger,
+		config:        config,
+		osManager:     osManager,
+		dockerManager: dockerManager,
 	}
 }
 
@@ -129,21 +131,8 @@ func (usecase *PersistentNodeUseCaseImpl) RunPersistentNodeTemplateScript(ctx co
 	resp.Code = responsecode.CodeSuccess
 }
 
-func (usecase *PersistentNodeUseCaseImpl) SendCommand(ctx context.Context, req request.SendCommandRequest, resp *response.APIResponse) {
-
-	err := usecase.tmuxManager.SendCommand(usecase.config.Tmux.SessionName, req.Command)
-
-	if err != nil {
-		resp.Code = responsecode.CodeTmuxError
-		resp.Error = "Error running script " + err.Error()
-		return
-	}
-
-	resp.Code = responsecode.CodeSuccess
-}
-
 func (usecase *PersistentNodeUseCaseImpl) GetServerProperties(ctx context.Context, resp *response.APIResponse) {
-	properties, err := usecase.osManager.ReadServerProperties(usecase.config.Files.MinecraftServerProperties)
+	properties, err := usecase.osManager.ReadServerProperties(usecase.config.DockerConfig.Files.MinecraftServerProperties)
 	if err != nil {
 		resp.Error = fmt.Sprintf("Error reading server.properties: %v", err)
 		resp.Code = responsecode.CodeFailed
@@ -155,11 +144,63 @@ func (usecase *PersistentNodeUseCaseImpl) GetServerProperties(ctx context.Contex
 
 func (usecase *PersistentNodeUseCaseImpl) SetServerProperties(ctx context.Context, req request.SetServerPropertiesRequest, resp *response.APIResponse) {
 
-	err := usecase.osManager.SetServerProperties(usecase.config.Files.MinecraftServerProperties, req.ServerProperties)
+	err := usecase.osManager.SetServerProperties(usecase.config.DockerConfig.Files.MinecraftServerProperties, req.ServerProperties)
 	if err != nil {
 		resp.Error = fmt.Sprintf("Error reading server.properties: %v", err)
 		resp.Code = responsecode.CodeFailed
 		return
 	}
+	resp.Code = responsecode.CodeSuccess
+}
+
+func (uc *PersistentNodeUseCaseImpl) StreamLogs(ctx context.Context, req request.GetPersistentNodeRealTimeLogsRequest, channel chan string) error {
+	// Start streaming logs from a specific container
+	go func() {
+		// Start the interactive session
+		err := uc.dockerManager.StreamOutput(req.SessionId, channel)
+		if err != nil {
+			fmt.Println("Error starting interactive session:", err)
+			channel <- fmt.Sprintf("Error starting interactive session: %v", err)
+			return
+		}
+
+		// Stream the logs and send them to the channel
+		// Assuming the `StartInteractiveSession` is configured to stream logs to a WebSocket channel
+		for logLine := range channel {
+			// Sending logs to the channel for WebSocket transmission
+			channel <- logLine
+		}
+	}()
+
+	return nil
+}
+
+func (uc *PersistentNodeUseCaseImpl) CreateSession(ctx context.Context, resp *response.APIResponse) {
+	// Create a new interactive session
+	uniqueCode := strconv.Itoa(rand.Int())
+	fmt.Println("Creating new session with code ", uniqueCode)
+	err := uc.dockerManager.CreateNewSession(uniqueCode, uc.config.DockerConfig.Host, uint(uc.config.DockerConfig.SshPort), uc.config.DockerConfig.Username, uc.config.DockerConfig.Password)
+	if err != nil {
+		resp.Code = responsecode.CodeFailed
+		resp.Error = fmt.Sprintf("Error creating new session: %v", err)
+		return
+	}
+
+	resp.Code = responsecode.CodeSuccess
+	resp.Data = responsedata.CreateSessionResponseData{
+		SessionId: uniqueCode,
+	}
+}
+
+func (uc *PersistentNodeUseCaseImpl) SendCommand(ctx context.Context, req request.SendCommandRequest, resp *response.APIResponse) {
+
+	// Send the command to the Docker container
+	err := uc.dockerManager.SendCommand(req.SessionId, req.Command, req.IsBase64Encoded)
+	if err != nil {
+		resp.Code = responsecode.CodeFailed
+		resp.Error = fmt.Sprintf("Error sending command to Docker container: %v", err)
+		return
+	}
+
 	resp.Code = responsecode.CodeSuccess
 }

@@ -46,16 +46,16 @@ func NewHttpServer(app *app.App) (*HttpServer, error) {
 		return r.HandleFunc(routerPath+path, wrappedHandler).Methods("POST", "GET")
 	}
 
-	handleWebsocketFunc := func(path string, handler func(conn *websocket.Conn)) *mux.Route {
+	handleWebsocketFunc := func(path string, handler func(w http.ResponseWriter, r *http.Request, conn *websocket.Conn)) *mux.Route {
 		fmt.Println("Registering websocket handler for", routerPath+path)
-		return wsRouter.HandleFunc(routerPath+path, func(w http.ResponseWriter, r *http.Request) {
+		return wsRouter.HandleFunc("/ws"+routerPath+path, func(w http.ResponseWriter, r *http.Request) {
 			conn, err := upgrader.Upgrade(w, r, nil)
 			if err != nil {
 				app.Dependencies.Logger.Errorf("Failed to upgrade connection: %v", err)
 				return
 			}
 			defer conn.Close()
-			handler(conn)
+			handler(w, r, conn)
 		})
 	}
 
@@ -69,13 +69,14 @@ func NewHttpServer(app *app.App) (*HttpServer, error) {
 	handleRouterFunc("persistent-node/run-template-script", persistentNodeController.RunPersistentNodeTemplateScript, true)
 
 	// Dashboard
-	handleRouterFunc("persistent-node/dashboard/send-command", persistentNodeController.SendCommand, true)
+	handleRouterFunc("persistent-node/dashboard/console/create-session", persistentNodeController.CreateSession, false)
+	handleRouterFunc("persistent-node/dashboard/console/send-command", persistentNodeController.SendCommand, false)
 
 	handleRouterFunc("persistent-node/dashboard/properties/get", persistentNodeController.GetServerProperties, true)
 	handleRouterFunc("persistent-node/dashboard/properties/set", persistentNodeController.SetServerProperties, true)
 
 	// Websocket
-	handleWebsocketFunc("ws/persistent-node/logs", persistentNodeController.GetPersistentNodeRealTimeLogs)
+	handleWebsocketFunc("persistent-node/logs", persistentNodeController.GetPersistentNodeRealTimeLogs)
 
 	r.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)

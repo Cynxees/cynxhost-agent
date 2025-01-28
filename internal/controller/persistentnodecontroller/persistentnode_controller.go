@@ -8,11 +8,8 @@ import (
 	"cynxhostagent/internal/model/response"
 	"cynxhostagent/internal/model/response/responsecode"
 	"cynxhostagent/internal/usecase"
-	"io"
 	"log"
 	"net/http"
-	"os"
-	"time"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/websocket"
@@ -63,71 +60,43 @@ func (controller *PersistentNodeController) RunPersistentNodeTemplateScript(w ht
 	return ctx, apiResponse
 }
 
-func (controller *PersistentNodeController) GetPersistentNodeRealTimeLogs(conn *websocket.Conn) {
+func (controller *PersistentNodeController) GetPersistentNodeRealTimeLogs(w http.ResponseWriter, r *http.Request, conn *websocket.Conn) {
+	// Channel to receive logs from Docker container
+	logChannel := make(chan string)
 
-	// Path to the log file (update with your file's path)
-	logFilePath := controller.config.Files.MinecraftLog
+	// Close the channel when the function returns
+	defer close(logChannel)
+	defer conn.Close()
 
-	// Open the log file for reading using os.Open, but treat it as an io.Reader
-	file, err := os.Open(logFilePath)
-	if err != nil {
-		log.Printf("Failed to open log file: %v", err)
-		conn.WriteMessage(websocket.TextMessage, []byte("Error: Unable to open log file"))
-		return
-	}
-	defer file.Close()
-
-	// Seek to the end of the file
-	_, err = file.Seek(0, io.SeekEnd)
-	if err != nil {
-		log.Printf("Failed to seek to end of file: %v", err)
-		conn.WriteMessage(websocket.TextMessage, []byte("Error: Unable to seek log file"))
+	id := r.URL.Query().Get("id")
+	if id == "" {
+		log.Println("ID parameter missing from the WebSocket URL")
 		return
 	}
 
-	// Use a buffer to read data
-	buffer := make([]byte, 1024) // You can adjust the buffer size
-	var lineBuffer []byte
-	ticker := time.NewTicker(1 * time.Second)
-	defer ticker.Stop()
+	request := request.GetPersistentNodeRealTimeLogsRequest{
+		SessionId: id,
+		// TODO: Fill the fields
+	}
 
-	for {
-		select {
-		case <-ticker.C:
-			// Read data from the file into the buffer
-			n, err := file.Read(buffer)
-			if err != nil && err != io.EOF {
-				log.Printf("Error reading file: %v", err)
-				conn.WriteMessage(websocket.TextMessage, []byte("Error: Unable to read log file"))
-				return
-			}
-
-			if n > 0 {
-				// Process the buffer to detect lines
-				for i := 0; i < n; i++ {
-					// Accumulate bytes until a newline character is found
-					if buffer[i] == '\n' {
-						// When a newline is detected, send the line over WebSocket
-						line := string(lineBuffer)
-						err := conn.WriteMessage(websocket.TextMessage, []byte(line))
-						if err != nil {
-							log.Printf("Failed to send message: %v", err)
-							return
-						}
-						log.Println("Log sent:", line)
-
-						// Reset the lineBuffer to start accumulating the next line
-						lineBuffer = nil
-					} else {
-						// Otherwise, accumulate the byte in the lineBuffer
-						lineBuffer = append(lineBuffer, buffer[i])
-					}
-				}
-			}
-
-			// Reset file pointer to continue reading from the current position
-			file.Seek(0, io.SeekCurrent)
+	// Start streaming logs from the Docker container
+	go func() {
+		if err := controller.persistentNodeUsecase.StreamLogs(context.Background(), request, logChannel); err != nil {
+			log.Printf("Error streaming Docker logs: %v", err)
+			conn.WriteMessage(websocket.TextMessage, []byte("Error: Unable to stream Docker logs"))
+			close(logChannel) // Close the channel if there's an error
+			return
 		}
+	}()
+
+	// Process and send logs over WebSocket as they are received
+	for logLine := range logChannel {
+		err := conn.WriteMessage(websocket.TextMessage, []byte(logLine))
+		if err != nil {
+			log.Printf("Failed to send message: %v", err)
+			break // Stop processing if there's an error sending the message
+		}
+		log.Println("Log sent:", logLine)
 	}
 }
 
@@ -144,6 +113,15 @@ func (controller *PersistentNodeController) SendCommand(w http.ResponseWriter, r
 	}
 
 	controller.persistentNodeUsecase.SendCommand(ctx, requestBody, &apiResponse)
+
+	return ctx, apiResponse
+}
+
+func (controller *PersistentNodeController) CreateSession(w http.ResponseWriter, r *http.Request) (context.Context, response.APIResponse) {
+	var apiResponse response.APIResponse
+
+	ctx := r.Context()
+	controller.persistentNodeUsecase.CreateSession(ctx, &apiResponse)
 
 	return ctx, apiResponse
 }

@@ -25,14 +25,7 @@ type Config struct {
 
 	Central ConfigCentral `mapstructure:"central"`
 
-	Files struct {
-		MinecraftLog              string `mapstructure:"minecraftLog"`
-		MinecraftServerProperties string `mapstructure:"minecraftServerProperties"`
-	} `mapstructure:"files"`
-
-	Tmux struct {
-		SessionName string `mapstructure:"sessionName"`
-	}
+	DockerConfig DockerConfig `mapstructure:"docker"`
 
 	Router struct {
 		Default string `mapstructure:"default"`
@@ -102,6 +95,25 @@ type ConfigCentral struct {
 	PrivateIp string `mapstructure:"privateIp"`
 	PublicIp  string `mapstructure:"publicIp"`
 	Port      string `mapstructure:"port"`
+}
+
+type TmuxConfig struct {
+	SessionName string `mapstructure:"sessionName"`
+}
+
+type DockerFilesConfig struct {
+	MinecraftLog              string `mapstructure:"minecraftLog"`
+	MinecraftServerProperties string `mapstructure:"minecraftServerProperties"`
+}
+
+type DockerConfig struct {
+	ContainerName string            `mapstructure:"containerName"`
+	Host          string            `mapstructure:"host"`
+	SshPort       int               `mapstructure:"sshPort"`
+	Username      string            `mapstructure:"username"`
+	Password      string            `mapstructure:"password"`
+	TmuxConfig    TmuxConfig        `mapstructure:"tmux"`
+	Files         DockerFilesConfig `mapstructure:"files"`
 }
 
 func (config *Config) LazyLoadConfig(tblInstance database.TblInstance, tblPersistentNode database.TblPersistentNode) Config {

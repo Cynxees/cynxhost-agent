@@ -7,9 +7,20 @@ import (
 )
 
 type PersistentNodeUseCase interface {
-	RunPersistentNodeTemplateScript(ctx context.Context, req request.RunPersistentNodeTemplateScriptRequest, resp *response.APIResponse)
-	SendCommand(ctx context.Context, req request.SendCommandRequest, resp *response.APIResponse)
 
+	// Dashboard
+	RunPersistentNodeTemplateScript(ctx context.Context, req request.RunPersistentNodeTemplateScriptRequest, resp *response.APIResponse)
+
+	// Server Properties
 	GetServerProperties(ctx context.Context, resp *response.APIResponse)
 	SetServerProperties(ctx context.Context, req request.SetServerPropertiesRequest, resp *response.APIResponse)
+
+	// Console
+	StreamLogs(ctx context.Context, req request.GetPersistentNodeRealTimeLogsRequest, channel chan string) error
+	CreateSession(ctx context.Context, resp *response.APIResponse)
+	SendCommand(ctx context.Context, req request.SendCommandRequest, resp *response.APIResponse)
+
+	// TMUX Console
+	// StreamTmuxLogs(ctx context.Context, resp *response.APIResponse)
+	// SendTmuxCommand(ctx context.Context, req request.SendCommandRequest, resp *response.APIResponse)
 }

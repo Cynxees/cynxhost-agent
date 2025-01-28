@@ -15,6 +15,6 @@ func NewUseCases(repos *Repos, dependencies *Dependencies) *UseCases {
 
 	return &UseCases{
 		UserUseCase:           userusecase.New(repos.TblUser, repos.JWTManager, dependencies.Config),
-		PersistentNodeUseCase: persistentnodeusecase.New(repos.TblPersistentNode, repos.TblInstance, repos.TblInstanceType, repos.TblStorage, repos.TblServerTemplate, dependencies.AWSClient, dependencies.Logger, dependencies.Config, dependencies.OSManager, dependencies.TmuxManager, dependencies.CynxhostCentral),
+		PersistentNodeUseCase: persistentnodeusecase.New(repos.TblPersistentNode, repos.TblInstance, repos.TblInstanceType, repos.TblStorage, repos.TblServerTemplate, dependencies.AWSClient, dependencies.Logger, dependencies.Config, dependencies.OSManager, dependencies.DockerManager, dependencies.CynxhostCentral),
 	}
 }

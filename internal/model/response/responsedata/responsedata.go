@@ -1,9 +1,12 @@
 package responsedata
 
-import (
-)
+import ()
 
 type AuthResponseData struct {
 	AccessToken string
 	TokenType   string
+}
+
+type CreateSessionResponseData struct {
+	SessionId string
 }

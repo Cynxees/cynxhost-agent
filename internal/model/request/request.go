@@ -26,11 +26,14 @@ type RunPersistentNodeTemplateScriptRequest struct {
 type GetPersistentNodeRealTimeLogsRequest struct {
 	SessionUser contextmodel.User `validate:"required"`
 
-	PersistentNodeId int `json:"persistent_node_id" validate:"required"`
+	PersistentNodeId int    `json:"persistent_node_id" validate:"required"`
+	SessionId        string `json:"session_id" validate:"required"`
 }
 
 type SendCommandRequest struct {
-	Command string `json:"command" validate:"required"`
+	Command         string `json:"command" validate:"required"`
+	SessionId       string `json:"session_id" validate:"required"`
+	IsBase64Encoded bool   `json:"is_base64_encoded"`
 }
 
 type SetServerPropertiesRequest struct {

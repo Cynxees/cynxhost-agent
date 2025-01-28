@@ -23,9 +23,9 @@ type Dependencies struct {
 
 	CynxhostCentral *cynxhostcentral.CynxhostCentral
 
-	JWTManager  *dependencies.JWTManager
-	OSManager   *dependencies.OSManager
-	TmuxManager *dependencies.TmuxManager
+	JWTManager    *dependencies.JWTManager
+	OSManager     *dependencies.OSManager
+	DockerManager *dependencies.DockerManager
 }
 
 func NewDependencies(configPath string) *Dependencies {
@@ -54,8 +54,8 @@ func NewDependencies(configPath string) *Dependencies {
 	logger.Infoln("Initializing OS Manager")
 	osManager := dependencies.NewOsManager()
 
-	logger.Infoln("Initializing Tmux Manager")
-	tmuxManager := dependencies.NewTmuxManager()
+	logger.Infoln("Initializing Docker Manager")
+	dockerManager := dependencies.NewDockerManager()
 
 	logger.Infoln("Connecting to Database")
 	databaseClient, err := dependencies.NewDatabaseClient(config)
@@ -76,7 +76,7 @@ func NewDependencies(configPath string) *Dependencies {
 		AWSClient:       awsManager,
 		JWTManager:      jwtManager,
 		OSManager:       osManager,
-		TmuxManager:     tmuxManager,
 		CynxhostCentral: cynxhostCentral,
+		DockerManager:   dockerManager,
 	}
 }
