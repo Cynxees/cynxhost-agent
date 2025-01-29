@@ -10,6 +10,7 @@ import (
 	"cynxhostagent/internal/usecase"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/websocket"
@@ -68,6 +69,12 @@ func (controller *PersistentNodeController) GetPersistentNodeRealTimeLogs(w http
 	defer close(logChannel)
 	defer conn.Close()
 
+	conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+	conn.SetPongHandler(func(string) error {
+		conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+		return nil
+	})
+
 	id := r.URL.Query().Get("id")
 	if id == "" {
 		log.Println("ID parameter missing from the WebSocket URL")
@@ -119,9 +126,17 @@ func (controller *PersistentNodeController) SendCommand(w http.ResponseWriter, r
 
 func (controller *PersistentNodeController) CreateSession(w http.ResponseWriter, r *http.Request) (context.Context, response.APIResponse) {
 	var apiResponse response.APIResponse
+	var requestBody request.StartSessionRequest
 
 	ctx := r.Context()
-	controller.persistentNodeUsecase.CreateSession(ctx, &apiResponse)
+
+	if err := helper.DecodeAndValidateRequest(r, &requestBody, controller.validator); err != nil {
+		apiResponse.Code = responsecode.CodeValidationError
+		apiResponse.Error = err.Error()
+		return ctx, apiResponse
+	}
+
+	controller.persistentNodeUsecase.CreateSession(ctx, requestBody, &apiResponse)
 
 	return ctx, apiResponse
 }

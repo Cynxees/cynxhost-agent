@@ -30,6 +30,10 @@ type GetPersistentNodeRealTimeLogsRequest struct {
 	SessionId        string `json:"session_id" validate:"required"`
 }
 
+type StartSessionRequest struct {
+	Shell string `json:"shell" validate:"required"`
+}
+
 type SendCommandRequest struct {
 	Command         string `json:"command" validate:"required"`
 	SessionId       string `json:"session_id" validate:"required"`

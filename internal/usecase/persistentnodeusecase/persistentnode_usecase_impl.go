@@ -175,11 +175,11 @@ func (uc *PersistentNodeUseCaseImpl) StreamLogs(ctx context.Context, req request
 	return nil
 }
 
-func (uc *PersistentNodeUseCaseImpl) CreateSession(ctx context.Context, resp *response.APIResponse) {
+func (uc *PersistentNodeUseCaseImpl) CreateSession(ctx context.Context, req request.StartSessionRequest, resp *response.APIResponse) {
 	// Create a new interactive session
 	uniqueCode := strconv.Itoa(rand.Int())
 	fmt.Println("Creating new session with code ", uniqueCode)
-	err := uc.dockerManager.CreateNewSession(uniqueCode, uc.config.DockerConfig.Host, uint(uc.config.DockerConfig.SshPort), uc.config.DockerConfig.Username, uc.config.DockerConfig.Password)
+	err := uc.dockerManager.CreateNewSession(uniqueCode, uc.config.DockerConfig.ContainerName, req.Shell)
 	if err != nil {
 		resp.Code = responsecode.CodeFailed
 		resp.Error = fmt.Sprintf("Error creating new session: %v", err)

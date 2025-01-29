@@ -4,11 +4,11 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io"
+	"os"
+	"os/exec"
 	"sync"
 
-	"github.com/docker/docker/client"
-	"github.com/melbahja/goph"
-	"golang.org/x/crypto/ssh"
+	"github.com/creack/pty"
 )
 
 var (
@@ -16,15 +16,12 @@ var (
 	sshSessions map[string]*PersistentSession
 )
 
-type DockerManager struct {
-	client *client.Client
-}
+type DockerManager struct{}
 
 type PersistentSession struct {
-	client  *goph.Client
-	session *ssh.Session
-	stdin   io.WriteCloser
-	stdout  io.Reader
+	pty    *os.File // The PTY file descriptor
+	stdin  io.WriteCloser
+	stdout io.Reader
 }
 
 func NewDockerManager() *DockerManager {
@@ -32,46 +29,26 @@ func NewDockerManager() *DockerManager {
 	return &DockerManager{}
 }
 
-// CreateNewSession creates a persistent SSH session.
-func (m *DockerManager) CreateNewSession(sessionId string, host string, port uint, username string, password string) error {
-	auth := goph.Password(password)
-
-	fmt.Println("Creating new connection")
-	client, err := goph.NewUnknown(username, host, port, auth)
+// CreateNewSession creates a persistent SSH session with PTY to a Docker container.
+func (m *DockerManager) CreateNewSession(sessionId string, containerName string, shell string) error {
+	// Construct SSH command to access the Docker container
+	cmd := exec.Command("docker", "exec", "-it", containerName, shell)
+	ptyFile, err := pty.Start(cmd)
 	if err != nil {
-		return fmt.Errorf("Failed to create ssh client: %v", err)
+		return fmt.Errorf("Failed to create PTY: %v", err)
 	}
 
-	fmt.Println("Creating new session")
-	session, err := client.NewSession()
-	if err != nil {
-		return fmt.Errorf("Failed to create ssh session: %v", err)
-	}
+	// Get stdin and stdout from the PTY
+	stdin := ptyFile
+	stdout := ptyFile
 
-	stdin, err := session.StdinPipe()
-	if err != nil {
-		return fmt.Errorf("Failed to get stdin pipe: %v", err)
-	}
-
-	// Set the output to os.Stdout
-	stdout, err := session.StdoutPipe()
-	if err != nil {
-		return fmt.Errorf("Failed to set stdout: %v", err)
-	}
-
-	// Start an interactive shell
-	err = session.Shell()
-	if err != nil {
-		return fmt.Errorf("Failed to start shell: %v", err)
-	}
-
+	// Save the session and PTY
 	fmt.Printf("Saving client for session: %s\n", sessionId)
 	mu.Lock()
 	sshSessions[sessionId] = &PersistentSession{
-		client:  client,
-		session: session,
-		stdin:   stdin,
-		stdout:  stdout,
+		pty:    ptyFile,
+		stdin:  stdin,
+		stdout: stdout,
 	}
 	mu.Unlock()
 
@@ -89,17 +66,19 @@ func (m *DockerManager) SendCommand(sessionId string, command string, isBase64En
 	}
 	mu.Unlock()
 
-	commandByte := []byte(command + "\n")
-
+	var commandByte []byte
 	if isBase64Encoded {
 		res, err := base64.StdEncoding.DecodeString(command)
 		if err != nil {
-			return fmt.Errorf("Failed to decode command: %v", err)
+			return fmt.Errorf("Failed to decode base64 command: %v", err)
 		}
 		commandByte = res
+	} else {
+		commandByte = []byte(command)
 	}
 
-	// Write the command to the shell
+	// Write the command to the PTY
+	fmt.Printf("Sending command to session %s: %s\n", sessionId, command)
 	_, err := pSession.stdin.Write(commandByte)
 	if err != nil {
 		return fmt.Errorf("Failed to send command: %v", err)
@@ -113,8 +92,7 @@ func (m *DockerManager) CloseSession(sessionId string) error {
 	mu.Lock()
 	pSession, ok := sshSessions[sessionId]
 	if ok {
-		pSession.session.Close()
-		pSession.client.Close()
+		pSession.pty.Close() // Close the PTY
 		delete(sshSessions, sessionId)
 	}
 	mu.Unlock()
@@ -123,6 +101,7 @@ func (m *DockerManager) CloseSession(sessionId string) error {
 	return nil
 }
 
+// StreamOutput streams output from the PTY to the provided channel.
 func (m *DockerManager) StreamOutput(sessionId string, outChan chan string) error {
 	mu.Lock()
 	pSession, ok := sshSessions[sessionId]
@@ -132,14 +111,15 @@ func (m *DockerManager) StreamOutput(sessionId string, outChan chan string) erro
 	}
 	mu.Unlock()
 
-	buf := make([]byte, 1024) // Buffer to read output
+	buf := make([]byte, 1024) // Buffer to read output from PTY
 	for {
 		n, err := pSession.stdout.Read(buf)
 		if err != nil && err != io.EOF {
 			return fmt.Errorf("Error reading stdout: %v", err)
 		}
 		if n > 0 {
-			outChan <- string(buf[:n]) // Send output to channel
+			encoded := base64.StdEncoding.EncodeToString(buf[:n])
+			outChan <- encoded // Send Base64-encoded output to channel
 		}
 		if err == io.EOF {
 			break // End of output stream
