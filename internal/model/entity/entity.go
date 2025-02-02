@@ -39,15 +39,16 @@ type TblServerTemplate struct {
 }
 
 type TblInstanceType struct {
-	Id           int       `gorm:"primaryKey" visibility:"1"`
-	CreatedDate  time.Time `gorm:"autoCreateTime" visibility:"1"`
-	UpdatedDate  time.Time `gorm:"autoUpdateTime" visibility:"1"`
-	Name         string    `gorm:"size:255;not null" visibility:"1"`
-	VcpuCount    int       `gorm:"not null" visibility:"1"`
-	MemorySizeMb int       `gorm:"not null" visibility:"1"`
-	SpotPrice    float64   `gorm:"type:decimal(10,2);not null" visibility:"10"`
-	SellPrice    float64   `gorm:"type:decimal(10,2);not null" visibility:"1"`
-	Status       string    `gorm:"type:enum('ACTIVE', 'INACTIVE', 'HIDDEN');not null" visibility:"1"`
+	Id               int       `gorm:"primaryKey" visibility:"1"`
+	CreatedDate      time.Time `gorm:"autoCreateTime" visibility:"1"`
+	UpdatedDate      time.Time `gorm:"autoUpdateTime" visibility:"1"`
+	Name             string    `gorm:"size:255;not null" visibility:"1"`
+	VcpuCount        int       `gorm:"not null" visibility:"1"`
+	MemorySizeGb     int       `gorm:"not null" visibility:"1"`
+	NetworkSpeedMbps int       `gorm:"not null" visibility:"1"`
+	SpotPrice        float64   `gorm:"type:decimal(10,2);not null" visibility:"10"`
+	SellPrice        float64   `gorm:"type:decimal(10,2);not null" visibility:"1"`
+	Status           string    `gorm:"type:enum('ACTIVE', 'INACTIVE', 'HIDDEN');not null" visibility:"1"`
 }
 
 type TblInstance struct {
