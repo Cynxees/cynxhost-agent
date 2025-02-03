@@ -10,3 +10,15 @@ type AuthResponseData struct {
 type CreateSessionResponseData struct {
 	SessionId string
 }
+
+type GetNodeContainerStats struct {
+	CpuPercent     float64
+	CpuUsed        float64
+	CpuLimit       float64
+	RamPercent     float64
+	RamUsed        float64
+	RamLimit       float64
+	StoragePercent float64
+	StorageUsed    float64
+	StorageLimit   float64
+}

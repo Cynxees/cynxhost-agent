@@ -1,7 +1,9 @@
 package dependencies
 
 import (
+	"context"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -9,6 +11,8 @@ import (
 	"sync"
 
 	"github.com/creack/pty"
+	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/client"
 )
 
 var (
@@ -16,7 +20,9 @@ var (
 	sshSessions map[string]*PersistentSession
 )
 
-type DockerManager struct{}
+type DockerManager struct {
+	client *client.Client
+}
 
 type PersistentSession struct {
 	pty    *os.File // The PTY file descriptor
@@ -26,7 +32,15 @@ type PersistentSession struct {
 
 func NewDockerManager() *DockerManager {
 	sshSessions = make(map[string]*PersistentSession)
-	return &DockerManager{}
+
+	cli, err := client.NewClientWithOpts(client.FromEnv)
+	if err != nil {
+		panic(err)
+	}
+
+	return &DockerManager{
+		client: cli,
+	}
 }
 
 // CreateNewSession creates a persistent SSH session with PTY to a Docker container.
@@ -127,4 +141,19 @@ func (m *DockerManager) StreamOutput(sessionId string, outChan chan string) erro
 	}
 
 	return nil
+}
+
+func (m *DockerManager) GetContainerStats(containerNameOrId string) (*container.StatsResponse, error) {
+
+	stats, err := m.client.ContainerStats(context.Background(), containerNameOrId, false)
+	if err != nil {
+		return nil, err
+	}
+
+	var data container.StatsResponse
+	if err := json.NewDecoder(stats.Body).Decode(&data); err != nil {
+		return nil, err
+	}
+
+	return &data, nil
 }

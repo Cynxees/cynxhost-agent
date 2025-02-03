@@ -204,3 +204,44 @@ func (uc *PersistentNodeUseCaseImpl) SendCommand(ctx context.Context, req reques
 
 	resp.Code = responsecode.CodeSuccess
 }
+
+func (uc *PersistentNodeUseCaseImpl) GetNodeContainerStats(ctx context.Context, resp *response.APIResponse) {
+
+	// Close the interactive session
+	stats, err := uc.dockerManager.GetContainerStats(uc.config.DockerConfig.ContainerName)
+	if err != nil {
+		resp.Code = responsecode.CodeFailed
+		resp.Error = fmt.Sprintf("Error closing session: %v", err)
+		return
+	}
+
+	// **CPU Usage Calculation**
+	cpuDelta := float64(stats.CPUStats.CPUUsage.TotalUsage - stats.PreCPUStats.CPUUsage.TotalUsage)
+	systemDelta := float64(stats.CPUStats.SystemUsage - stats.PreCPUStats.SystemUsage)
+	cpuCount := float64(stats.CPUStats.OnlineCPUs)
+
+	var cpuUsagePercent float64
+	if systemDelta > 0.0 && cpuCount > 0.0 {
+		cpuUsagePercent = (cpuDelta / systemDelta) * cpuCount * 100.0
+	}
+
+	// **Memory Usage**
+	memoryUsage := float64(stats.MemoryStats.Usage) / (1024 * 1024 * 1024) // Convert to GB
+	memoryLimit := float64(stats.MemoryStats.Limit) / (1024 * 1024 * 1024) // Convert to GB
+
+	resp.Data = responsedata.GetNodeContainerStats{
+		CpuPercent: cpuUsagePercent,
+		CpuUsed:    (cpuDelta * cpuCount) / (1000 * 1000),
+		CpuLimit:   (systemDelta) / (1000 * 1000),
+
+		RamPercent: (memoryUsage / memoryLimit) * 100,
+		RamUsed:    memoryUsage,
+		RamLimit:   memoryLimit,
+
+		StoragePercent: 0,
+		StorageUsed:    0,
+		StorageLimit:   0,
+	}
+
+	resp.Code = responsecode.CodeSuccess
+}

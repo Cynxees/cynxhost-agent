@@ -10,6 +10,7 @@ type PersistentNodeUseCase interface {
 
 	// Dashboard
 	RunPersistentNodeTemplateScript(ctx context.Context, req request.RunPersistentNodeTemplateScriptRequest, resp *response.APIResponse)
+	GetNodeContainerStats(ctx context.Context, resp *response.APIResponse)
 
 	// Server Properties
 	GetServerProperties(ctx context.Context, resp *response.APIResponse)

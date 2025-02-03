@@ -167,3 +167,13 @@ func (controller *PersistentNodeController) SetServerProperties(w http.ResponseW
 
 	return ctx, apiResponse
 }
+
+func (controller *PersistentNodeController) GetNodeContainerStats(w http.ResponseWriter, r *http.Request) (context.Context, response.APIResponse) {
+	var apiResponse response.APIResponse
+
+	ctx := r.Context()
+
+	controller.persistentNodeUsecase.GetNodeContainerStats(ctx, &apiResponse)
+
+	return ctx, apiResponse
+}

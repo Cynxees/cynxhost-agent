@@ -66,14 +66,17 @@ func NewHttpServer(app *app.App) (*HttpServer, error) {
 	handleRouterFunc("user/bypass-login", userController.BypassLoginUser, false)
 
 	// Persistent Node
-	handleRouterFunc("persistent-node/run-template-script", persistentNodeController.RunPersistentNodeTemplateScript, true)
+	handleRouterFunc("persistent-node/run-template-script", persistentNodeController.RunPersistentNodeTemplateScript, false)
 
 	// Dashboard
+	handleRouterFunc("persistent-node/dashboard/container-stats", persistentNodeController.GetNodeContainerStats, false)
+
+	// Console
 	handleRouterFunc("persistent-node/dashboard/console/create-session", persistentNodeController.CreateSession, false)
 	handleRouterFunc("persistent-node/dashboard/console/send-command", persistentNodeController.SendCommand, false)
 
-	handleRouterFunc("persistent-node/dashboard/properties/get", persistentNodeController.GetServerProperties, true)
-	handleRouterFunc("persistent-node/dashboard/properties/set", persistentNodeController.SetServerProperties, true)
+	handleRouterFunc("persistent-node/dashboard/properties/get", persistentNodeController.GetServerProperties, false)
+	handleRouterFunc("persistent-node/dashboard/properties/set", persistentNodeController.SetServerProperties, false)
 
 	// Websocket
 	handleWebsocketFunc("persistent-node/logs", persistentNodeController.GetPersistentNodeRealTimeLogs)
