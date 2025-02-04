@@ -28,7 +28,7 @@
     }
   },
   "router": {
-    "default": "/api/v1/"
+    "default": "/cynxapi/v1/"
   },
   "database": {
     "mysql": {
@@ -58,7 +58,8 @@
     },
     "cors": {
       "enabled": true,
-      "origin": "*"
+      "origins": ["http://localhost:3000", "https://cynxhost-web.vercel.app", "https://localhost:3000", "https://web.cynx.buzz:3000", "https://app.cynx.buzz"],
+      "domain": ""
     }
   }
 }

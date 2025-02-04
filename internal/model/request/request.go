@@ -43,3 +43,7 @@ type SendCommandRequest struct {
 type SetServerPropertiesRequest struct {
 	ServerProperties []entity.ServerProperty `json:"server_properties" validate:"required"`
 }
+
+type SendSingleDockerCommandRequest struct {
+	Command string `json:"command" validate:"required"`
+}

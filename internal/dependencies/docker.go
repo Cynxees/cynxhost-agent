@@ -1,6 +1,7 @@
 package dependencies
 
 import (
+	"bytes"
 	"context"
 	"encoding/base64"
 	"encoding/json"
@@ -156,4 +157,22 @@ func (m *DockerManager) GetContainerStats(containerNameOrId string) (*container.
 	}
 
 	return &data, nil
+}
+
+func (m *DockerManager) SendSingleDockerCommand(containerNameOrId string, command string) (string, error) {
+
+	cmd := exec.Command("docker", "exec", containerNameOrId, command)
+
+	// Capture the output
+	var output bytes.Buffer
+	cmd.Stdout = &output
+	cmd.Stderr = &output
+
+	// Run the command
+	err := cmd.Run()
+	if err != nil {
+		return "", fmt.Errorf("failed to execute docker command: %w", err)
+	}
+
+	return output.String(), nil
 }

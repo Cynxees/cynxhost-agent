@@ -20,6 +20,7 @@ type PersistentNodeUseCase interface {
 	StreamLogs(ctx context.Context, req request.GetPersistentNodeRealTimeLogsRequest, channel chan string) error
 	CreateSession(ctx context.Context, req request.StartSessionRequest, resp *response.APIResponse)
 	SendCommand(ctx context.Context, req request.SendCommandRequest, resp *response.APIResponse)
+	SendSingleDockerCommand(ctx context.Context, req request.SendSingleDockerCommandRequest, resp *response.APIResponse)
 
 	// TMUX Console
 	// StreamTmuxLogs(ctx context.Context, resp *response.APIResponse)

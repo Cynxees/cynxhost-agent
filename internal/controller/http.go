@@ -25,9 +25,9 @@ type HttpServer struct {
 func NewHttpServer(app *app.App) (*HttpServer, error) {
 
 	c := cors.New(cors.Options{
-		AllowedOrigins: []string{"*"},                            // replace with your frontend URL
-		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE"}, // allowed methods
-		AllowedHeaders: []string{"Content-Type"},                 // allowed headers
+		AllowedOrigins: app.Dependencies.Config.Security.CORS.Origins,       // replace with your frontend URL
+		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}, // allowed methods
+		AllowedHeaders: []string{"Content-Type"},                            // allowed headers
 	})
 
 	r := mux.NewRouter()
@@ -48,7 +48,7 @@ func NewHttpServer(app *app.App) (*HttpServer, error) {
 
 	handleWebsocketFunc := func(path string, handler func(w http.ResponseWriter, r *http.Request, conn *websocket.Conn)) *mux.Route {
 		fmt.Println("Registering websocket handler for", routerPath+path)
-		return wsRouter.HandleFunc("/ws"+routerPath+path, func(w http.ResponseWriter, r *http.Request) {
+		return wsRouter.HandleFunc("/cynxws"+routerPath+path, func(w http.ResponseWriter, r *http.Request) {
 			conn, err := upgrader.Upgrade(w, r, nil)
 			if err != nil {
 				app.Dependencies.Logger.Errorf("Failed to upgrade connection: %v", err)
@@ -74,6 +74,7 @@ func NewHttpServer(app *app.App) (*HttpServer, error) {
 	// Console
 	handleRouterFunc("persistent-node/dashboard/console/create-session", persistentNodeController.CreateSession, false)
 	handleRouterFunc("persistent-node/dashboard/console/send-command", persistentNodeController.SendCommand, false)
+	handleRouterFunc("persistent-node/dashboard/console/send-single-docker-command", persistentNodeController.SendSingleDockerCommand, false)
 
 	handleRouterFunc("persistent-node/dashboard/properties/get", persistentNodeController.GetServerProperties, false)
 	handleRouterFunc("persistent-node/dashboard/properties/set", persistentNodeController.SetServerProperties, false)

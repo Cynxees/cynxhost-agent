@@ -25,6 +25,7 @@ const (
 	CodeOsError       ResponseCode = "OSERR"
 	CodeTmuxError     ResponseCode = "TMXERR"
 	CodeCentralError  ResponseCode = "CENTERR"
+	CodeDockerError   ResponseCode = "DOCKERERR"
 
 	// DB Error
 	CodeTblServerTemplateError ResponseCode = "TBLSTE"

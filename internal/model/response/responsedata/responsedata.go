@@ -22,3 +22,7 @@ type GetNodeContainerStats struct {
 	StorageUsed    float64
 	StorageLimit   float64
 }
+
+type SendSingleDockerCommandResponseData struct {
+	Output string
+}

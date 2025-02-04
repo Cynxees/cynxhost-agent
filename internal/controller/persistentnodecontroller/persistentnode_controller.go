@@ -124,6 +124,24 @@ func (controller *PersistentNodeController) SendCommand(w http.ResponseWriter, r
 	return ctx, apiResponse
 }
 
+
+func (controller *PersistentNodeController) SendSingleDockerCommand(w http.ResponseWriter, r *http.Request) (context.Context, response.APIResponse) {
+	var requestBody request.SendSingleDockerCommandRequest
+	var apiResponse response.APIResponse
+
+	ctx := r.Context()
+
+	if err := helper.DecodeAndValidateRequest(r, &requestBody, controller.validator); err != nil {
+		apiResponse.Code = responsecode.CodeValidationError
+		apiResponse.Error = err.Error()
+		return ctx, apiResponse
+	}
+
+	controller.persistentNodeUsecase.SendSingleDockerCommand(ctx, requestBody, &apiResponse)
+
+	return ctx, apiResponse
+}
+
 func (controller *PersistentNodeController) CreateSession(w http.ResponseWriter, r *http.Request) (context.Context, response.APIResponse) {
 	var apiResponse response.APIResponse
 	var requestBody request.StartSessionRequest

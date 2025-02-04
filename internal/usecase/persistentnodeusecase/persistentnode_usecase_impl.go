@@ -181,7 +181,7 @@ func (uc *PersistentNodeUseCaseImpl) CreateSession(ctx context.Context, req requ
 	fmt.Println("Creating new session with code ", uniqueCode)
 	err := uc.dockerManager.CreateNewSession(uniqueCode, uc.config.DockerConfig.ContainerName, req.Shell)
 	if err != nil {
-		resp.Code = responsecode.CodeFailed
+		resp.Code = responsecode.CodeDockerError
 		resp.Error = fmt.Sprintf("Error creating new session: %v", err)
 		return
 	}
@@ -197,7 +197,7 @@ func (uc *PersistentNodeUseCaseImpl) SendCommand(ctx context.Context, req reques
 	// Send the command to the Docker container
 	err := uc.dockerManager.SendCommand(req.SessionId, req.Command, req.IsBase64Encoded)
 	if err != nil {
-		resp.Code = responsecode.CodeFailed
+		resp.Code = responsecode.CodeDockerError
 		resp.Error = fmt.Sprintf("Error sending command to Docker container: %v", err)
 		return
 	}
@@ -210,8 +210,8 @@ func (uc *PersistentNodeUseCaseImpl) GetNodeContainerStats(ctx context.Context, 
 	// Close the interactive session
 	stats, err := uc.dockerManager.GetContainerStats(uc.config.DockerConfig.ContainerName)
 	if err != nil {
-		resp.Code = responsecode.CodeFailed
-		resp.Error = fmt.Sprintf("Error closing session: %v", err)
+		resp.Code = responsecode.CodeDockerError
+		resp.Error = fmt.Sprintf("Error getting container stats: %v", err)
 		return
 	}
 
@@ -244,4 +244,19 @@ func (uc *PersistentNodeUseCaseImpl) GetNodeContainerStats(ctx context.Context, 
 	}
 
 	resp.Code = responsecode.CodeSuccess
+}
+
+func (uc *PersistentNodeUseCaseImpl) SendSingleDockerCommand(ctx context.Context, req request.SendSingleDockerCommandRequest, resp *response.APIResponse) {
+
+	output, err := uc.dockerManager.SendSingleDockerCommand(uc.config.DockerConfig.ContainerName, req.Command)
+	if err != nil {
+		resp.Code = responsecode.CodeDockerError
+		resp.Error = fmt.Sprintf("Error sending command to Docker container: %v", err)
+		return
+	}
+
+	resp.Code = responsecode.CodeSuccess
+	resp.Data = responsedata.SendSingleDockerCommandResponseData{
+		Output: output,
+	}
 }
