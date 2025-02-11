@@ -6,7 +6,7 @@
     "port": 3001,
     "websocketPort": 8000,
     "name": "CYNXHOST-AGENT",
-    "debug": false
+    "debug": true
   },
   "central": {
     "privateIp": "${CENTRAL_PRIVATE_IP}",

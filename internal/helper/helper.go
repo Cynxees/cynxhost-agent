@@ -15,10 +15,45 @@ import (
 )
 
 func DecodeAndValidateRequest(r *http.Request, dst interface{}, v *validator.Validate) error {
+	if r.Header.Get("Content-Type") != "" && r.Header.Get("Content-Type")[:19] == "multipart/form-data" {
+		return decodeMultipartForm(r, dst, v)
+	}
+
+	// If not multipart, proceed with normal JSON decoding
 	if err := json.NewDecoder(r.Body).Decode(dst); err != nil {
 		return errors.New("invalid request payload: " + err.Error())
 	}
 
+	// Validate the struct
+	if err := v.Struct(dst); err != nil {
+		return errors.New("validation failed: " + err.Error())
+	}
+
+	return nil
+}
+
+func decodeMultipartForm(r *http.Request, dst interface{}, v *validator.Validate) error {
+	if err := r.ParseMultipartForm(10 << 20); err != nil { // 10MB limit
+		return errors.New("failed to parse multipart form: " + err.Error())
+	}
+
+	// Convert request struct (dst) into a map to populate fields dynamically
+	data := make(map[string]string)
+
+	// Populate form fields (excluding files)
+	for key, values := range r.Form {
+		if len(values) > 0 {
+			data[key] = values[0] // Use first value for simplicity
+		}
+	}
+
+	// Convert `data` back to JSON and decode it into `dst`
+	jsonData, _ := json.Marshal(data)
+	if err := json.Unmarshal(jsonData, dst); err != nil {
+		return errors.New("failed to decode form data: " + err.Error())
+	}
+
+	// Validate the struct
 	if err := v.Struct(dst); err != nil {
 		return errors.New("validation failed: " + err.Error())
 	}

@@ -1,7 +1,5 @@
 package responsedata
 
-import ()
-
 type AuthResponseData struct {
 	AccessToken string
 	TokenType   string
@@ -25,4 +23,8 @@ type GetNodeContainerStats struct {
 
 type SendSingleDockerCommandResponseData struct {
 	Output string
+}
+
+type DownloadFileResponseData struct {
+	FileData []byte
 }

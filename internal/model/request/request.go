@@ -3,6 +3,7 @@ package request
 import (
 	contextmodel "cynxhostagent/internal/model/context"
 	"cynxhostagent/internal/model/entity"
+	"mime/multipart"
 )
 
 type PaginateRequest struct {
@@ -46,4 +47,14 @@ type SetServerPropertiesRequest struct {
 
 type SendSingleDockerCommandRequest struct {
 	Command string `json:"command" validate:"required"`
+}
+
+type DownloadFileRequest struct {
+	FilePath string `json:"file_path" validate:"required"`
+}
+
+type UploadFileRequest struct {
+	DestinationPath string               `json:"destination_path" validate:"required"`
+	FileData        multipart.File       `json:"file_data" validate:"required"`
+	FileHeader      multipart.FileHeader `json:"file_header" validate:"required"`
 }

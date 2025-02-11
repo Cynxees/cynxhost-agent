@@ -124,7 +124,6 @@ func (controller *PersistentNodeController) SendCommand(w http.ResponseWriter, r
 	return ctx, apiResponse
 }
 
-
 func (controller *PersistentNodeController) SendSingleDockerCommand(w http.ResponseWriter, r *http.Request) (context.Context, response.APIResponse) {
 	var requestBody request.SendSingleDockerCommandRequest
 	var apiResponse response.APIResponse
@@ -192,6 +191,59 @@ func (controller *PersistentNodeController) GetNodeContainerStats(w http.Respons
 	ctx := r.Context()
 
 	controller.persistentNodeUsecase.GetNodeContainerStats(ctx, &apiResponse)
+
+	return ctx, apiResponse
+}
+
+func (controller *PersistentNodeController) DownloadFile(w http.ResponseWriter, r *http.Request) (context.Context, response.APIResponse) {
+	var requestBody request.DownloadFileRequest
+	var apiResponse response.APIResponse
+
+	ctx := r.Context()
+
+	if err := helper.DecodeAndValidateRequest(r, &requestBody, controller.validator); err != nil {
+		apiResponse.Code = responsecode.CodeValidationError
+		apiResponse.Error = err.Error()
+		return ctx, apiResponse
+	}
+
+	controller.persistentNodeUsecase.DownloadFile(ctx, requestBody, &apiResponse)
+
+	return ctx, apiResponse
+}
+
+func (controller *PersistentNodeController) UploadFile(w http.ResponseWriter, r *http.Request) (context.Context, response.APIResponse) {
+	var apiResponse response.APIResponse
+	var requestBody request.UploadFileRequest
+
+	ctx := r.Context()
+
+	if err := r.ParseMultipartForm(10 << 20); err != nil { // 10MB limit
+		apiResponse.Code = responsecode.CodeValidationError
+		apiResponse.Error = "Failed to parse multipart form: " + err.Error()
+		return ctx, apiResponse
+	}
+
+	// Retrieve file from form
+	file, fileHeader, err := r.FormFile("file") // "file" should match the form field name
+	if err != nil {
+		apiResponse.Code = responsecode.CodeValidationError
+		apiResponse.Error = "Failed to get file from request: " + err.Error()
+		return ctx, apiResponse
+	}
+	defer file.Close()
+
+	// Assign file details to request body
+	requestBody.FileData = file
+	requestBody.FileHeader = *fileHeader
+
+	if err := helper.DecodeAndValidateRequest(r, &requestBody, controller.validator); err != nil {
+		apiResponse.Code = responsecode.CodeValidationError
+		apiResponse.Error = err.Error()
+		return ctx, apiResponse
+	}
+
+	controller.persistentNodeUsecase.UploadFile(ctx, requestBody, &apiResponse)
 
 	return ctx, apiResponse
 }

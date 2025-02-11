@@ -260,3 +260,31 @@ func (uc *PersistentNodeUseCaseImpl) SendSingleDockerCommand(ctx context.Context
 		Output: output,
 	}
 }
+
+func (uc *PersistentNodeUseCaseImpl) DownloadFile(ctx context.Context, req request.DownloadFileRequest, resp *response.APIResponse) {
+	// Download the file from the server
+	fileData, err := uc.osManager.GetFile(req.FilePath)
+	if err != nil {
+		resp.Code = responsecode.CodeOsError
+		resp.Error = fmt.Sprintf("Error reading file: %v", err)
+		return
+	}
+
+	resp.Code = responsecode.CodeSuccess
+	resp.Data = responsedata.DownloadFileResponseData{
+		FileData: fileData,
+	}
+}
+
+func (uc *PersistentNodeUseCaseImpl) UploadFile(ctx context.Context, req request.UploadFileRequest, resp *response.APIResponse) {
+
+	// Upload the file to the server
+	err := uc.osManager.WriteFile(req.DestinationPath, req.FileData, req.FileHeader)
+	if err != nil {
+		resp.Code = responsecode.CodeOsError
+		resp.Error = fmt.Sprintf("Error writing file: %v", err)
+		return
+	}
+
+	resp.Code = responsecode.CodeSuccess
+}

@@ -70,11 +70,15 @@ func NewHttpServer(app *app.App) (*HttpServer, error) {
 
 	// Dashboard
 	handleRouterFunc("persistent-node/dashboard/container-stats", persistentNodeController.GetNodeContainerStats, false)
+	handleRouterFunc("persistent-node/dashboard/send-single-docker-command", persistentNodeController.SendSingleDockerCommand, false)
 
 	// Console
 	handleRouterFunc("persistent-node/dashboard/console/create-session", persistentNodeController.CreateSession, false)
 	handleRouterFunc("persistent-node/dashboard/console/send-command", persistentNodeController.SendCommand, false)
-	handleRouterFunc("persistent-node/dashboard/console/send-single-docker-command", persistentNodeController.SendSingleDockerCommand, false)
+	
+	// Files
+	handleRouterFunc("persistent-node/dashboard/files/download-file", persistentNodeController.DownloadFile, false)
+	handleRouterFunc("persistent-node/dashboard/files/upload-file", persistentNodeController.UploadFile, false)
 
 	handleRouterFunc("persistent-node/dashboard/properties/get", persistentNodeController.GetServerProperties, false)
 	handleRouterFunc("persistent-node/dashboard/properties/set", persistentNodeController.SetServerProperties, false)
