@@ -37,13 +37,22 @@ func NewHttpServer(app *app.App) (*HttpServer, error) {
 	routerPath := app.Dependencies.Config.Router.Default
 	debug := app.Dependencies.Config.App.Debug
 
-	handleRouterFunc := func(path string, handler middleware.HandlerFuncWithHelper, requireAuth bool) *mux.Route {
+	handleDefaultRouterFunc := func(path string, handler middleware.HandlerFuncWithHelper, requireAuth bool) *mux.Route {
 		wrappedHandler := middleware.WrapHandler(handler, debug)
 
 		if requireAuth && !debug {
 			wrappedHandler = middleware.AuthMiddleware(app.Dependencies.JWTManager, wrappedHandler, debug)
 		}
 		return r.HandleFunc(routerPath+path, wrappedHandler).Methods("POST", "GET")
+	}
+
+	handleBasicRouterFunc := func(path string, handler func(http.ResponseWriter, *http.Request), requireAuth bool) *mux.Route {
+
+		if requireAuth && !debug {
+			handler = middleware.AuthMiddleware(app.Dependencies.JWTManager, handler, debug)
+		}
+
+		return r.HandleFunc(routerPath+path, handler).Methods("POST", "GET")
 	}
 
 	handleWebsocketFunc := func(path string, handler func(w http.ResponseWriter, r *http.Request, conn *websocket.Conn)) *mux.Route {
@@ -63,25 +72,27 @@ func NewHttpServer(app *app.App) (*HttpServer, error) {
 	persistentNodeController := persistentnodecontroller.New(app.Usecases.PersistentNodeUseCase, app.Dependencies.Validator, app.Dependencies.Config)
 
 	// User
-	handleRouterFunc("user/bypass-login", userController.BypassLoginUser, false)
+	handleDefaultRouterFunc("user/bypass-login", userController.BypassLoginUser, false)
 
 	// Persistent Node
-	handleRouterFunc("persistent-node/run-template-script", persistentNodeController.RunPersistentNodeTemplateScript, false)
+	handleDefaultRouterFunc("persistent-node/run-template-script", persistentNodeController.RunPersistentNodeTemplateScript, false)
 
 	// Dashboard
-	handleRouterFunc("persistent-node/dashboard/container-stats", persistentNodeController.GetNodeContainerStats, false)
-	handleRouterFunc("persistent-node/dashboard/send-single-docker-command", persistentNodeController.SendSingleDockerCommand, false)
+	handleDefaultRouterFunc("persistent-node/dashboard/container-stats", persistentNodeController.GetNodeContainerStats, false)
+	handleDefaultRouterFunc("persistent-node/dashboard/send-single-docker-command", persistentNodeController.SendSingleDockerCommand, false)
 
 	// Console
-	handleRouterFunc("persistent-node/dashboard/console/create-session", persistentNodeController.CreateSession, false)
-	handleRouterFunc("persistent-node/dashboard/console/send-command", persistentNodeController.SendCommand, false)
-	
-	// Files
-	handleRouterFunc("persistent-node/dashboard/files/download-file", persistentNodeController.DownloadFile, false)
-	handleRouterFunc("persistent-node/dashboard/files/upload-file", persistentNodeController.UploadFile, false)
+	handleDefaultRouterFunc("persistent-node/dashboard/console/create-session", persistentNodeController.CreateSession, false)
+	handleDefaultRouterFunc("persistent-node/dashboard/console/send-command", persistentNodeController.SendCommand, false)
 
-	handleRouterFunc("persistent-node/dashboard/properties/get", persistentNodeController.GetServerProperties, false)
-	handleRouterFunc("persistent-node/dashboard/properties/set", persistentNodeController.SetServerProperties, false)
+	// Files
+	handleBasicRouterFunc("persistent-node/dashboard/files/download-file", persistentNodeController.DownloadFile, false)
+	handleDefaultRouterFunc("persistent-node/dashboard/files/upload-file", persistentNodeController.UploadFile, false)
+	handleDefaultRouterFunc("persistent-node/dashboard/files/remove-file", persistentNodeController.RemoveFile, false)
+	handleDefaultRouterFunc("persistent-node/dashboard/files/list-directory", persistentNodeController.ListDirectory, false)
+
+	handleDefaultRouterFunc("persistent-node/dashboard/properties/get", persistentNodeController.GetServerProperties, false)
+	handleDefaultRouterFunc("persistent-node/dashboard/properties/set", persistentNodeController.SetServerProperties, false)
 
 	// Websocket
 	handleWebsocketFunc("persistent-node/logs", persistentNodeController.GetPersistentNodeRealTimeLogs)

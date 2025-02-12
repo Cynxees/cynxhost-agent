@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"os"
 	"os/exec"
 	"sync"
@@ -175,4 +176,80 @@ func (m *DockerManager) SendSingleDockerCommand(containerNameOrId string, comman
 	}
 
 	return output.String(), nil
+}
+
+func (*DockerManager) WriteFile(filePath string, file multipart.File, header multipart.FileHeader, containerName string) error {
+	// Create a temporary file on the host to store the uploaded file
+	tmpFile, err := os.CreateTemp("", "upload-*.tmp")
+	if err != nil {
+		return fmt.Errorf("failed to create temporary file: %v", err)
+	}
+	defer tmpFile.Close()
+
+	// Copy the file content from the uploaded file to the temporary file
+	_, err = io.Copy(tmpFile, file)
+	if err != nil {
+		return fmt.Errorf("failed to copy file content: %v", err)
+	}
+
+	// Use the docker cp command to copy the file from the host to the container
+	cmd := exec.Command("docker", "cp", tmpFile.Name(), fmt.Sprintf("%s:%s", containerName, filePath))
+	err = cmd.Run()
+	if err != nil {
+		return fmt.Errorf("failed to copy file to container: %v", err)
+	}
+
+	return nil
+}
+
+func (*DockerManager) GetFile(containerName, containerFilePath string) ([]byte, error) {
+	// Create a temporary file to store the copied file from container
+	tmpFile, err := os.CreateTemp("", "getfile-*")
+	if err != nil {
+		return nil, fmt.Errorf("failed to create temp file: %v", err)
+	}
+	defer os.Remove(tmpFile.Name()) // Clean up after function exits
+
+	// Copy the file from container to temp file
+	cmd := exec.Command("docker", "cp", fmt.Sprintf("%s:%s", containerName, containerFilePath), tmpFile.Name())
+	err = cmd.Run()
+	if err != nil {
+		return nil, fmt.Errorf("failed to copy file from container: %v", err)
+	}
+
+	// Read the file content
+	content, err := os.ReadFile(tmpFile.Name())
+	if err != nil {
+		return nil, fmt.Errorf("failed to read file: %v", err)
+	}
+
+	return content, nil
+}
+
+func (*DockerManager) RemoveFile(containerName, containerFilePath string) error {
+	// Use the docker exec command to remove the file from the container
+	cmd := exec.Command("docker", "exec", containerName, "rm", containerFilePath)
+	err := cmd.Run()
+	if err != nil {
+		return fmt.Errorf("failed to remove file from container: %v", err)
+	}
+
+	return nil
+}
+
+func (*DockerManager) ListDirectory(containerName, containerDirPath string) ([]string, error) {
+	// Use the docker exec command to list the files in the directory
+	cmd := exec.Command("docker", "exec", containerName, "ls", containerDirPath)
+	output, err := cmd.Output()
+	if err != nil {
+		return nil, fmt.Errorf("failed to list directory: %v", err)
+	}
+
+	// Split the output into individual file names
+	files := make([]string, 0)
+	for _, file := range bytes.Fields(output) {
+		files = append(files, string(file))
+	}
+
+	return files, nil
 }

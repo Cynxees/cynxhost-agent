@@ -25,6 +25,6 @@ type SendSingleDockerCommandResponseData struct {
 	Output string
 }
 
-type DownloadFileResponseData struct {
-	FileData []byte
+type ListDirectoryResponseData struct {
+	Files []string
 }

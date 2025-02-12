@@ -8,8 +8,10 @@ import (
 	"cynxhostagent/internal/model/response"
 	"cynxhostagent/internal/model/response/responsecode"
 	"cynxhostagent/internal/usecase"
+	"fmt"
 	"log"
 	"net/http"
+	"path"
 	"time"
 
 	"github.com/go-playground/validator/v10"
@@ -195,21 +197,33 @@ func (controller *PersistentNodeController) GetNodeContainerStats(w http.Respons
 	return ctx, apiResponse
 }
 
-func (controller *PersistentNodeController) DownloadFile(w http.ResponseWriter, r *http.Request) (context.Context, response.APIResponse) {
+func (controller *PersistentNodeController) DownloadFile(w http.ResponseWriter, r *http.Request) {
 	var requestBody request.DownloadFileRequest
 	var apiResponse response.APIResponse
 
-	ctx := r.Context()
-
+	// Decode and validate request
 	if err := helper.DecodeAndValidateRequest(r, &requestBody, controller.validator); err != nil {
 		apiResponse.Code = responsecode.CodeValidationError
 		apiResponse.Error = err.Error()
-		return ctx, apiResponse
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
 
-	controller.persistentNodeUsecase.DownloadFile(ctx, requestBody, &apiResponse)
+	// Get the file content
+	fileContent, err := controller.persistentNodeUsecase.DownloadFile(r.Context(), requestBody, &apiResponse)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error downloading file: %s", err.Error()), http.StatusInternalServerError)
+		return
+	}
 
-	return ctx, apiResponse
+	// Set headers for file download
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", path.Base(requestBody.FilePath)))
+	w.Header().Set("Content-Type", "application/octet-stream")
+	w.Header().Set("Content-Length", fmt.Sprintf("%d", len(fileContent)))
+
+	// Write file content to response
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write(fileContent) // Ignore error since nothing can be done if writing fails
 }
 
 func (controller *PersistentNodeController) UploadFile(w http.ResponseWriter, r *http.Request) (context.Context, response.APIResponse) {
@@ -244,6 +258,40 @@ func (controller *PersistentNodeController) UploadFile(w http.ResponseWriter, r 
 	}
 
 	controller.persistentNodeUsecase.UploadFile(ctx, requestBody, &apiResponse)
+
+	return ctx, apiResponse
+}
+
+func (controller *PersistentNodeController) RemoveFile(w http.ResponseWriter, r *http.Request) (context.Context, response.APIResponse) {
+	var requestBody request.RemoveFileRequest
+	var apiResponse response.APIResponse
+
+	ctx := r.Context()
+
+	if err := helper.DecodeAndValidateRequest(r, &requestBody, controller.validator); err != nil {
+		apiResponse.Code = responsecode.CodeValidationError
+		apiResponse.Error = err.Error()
+		return ctx, apiResponse
+	}
+
+	controller.persistentNodeUsecase.RemoveFile(ctx, requestBody, &apiResponse)
+
+	return ctx, apiResponse
+}
+
+func (controller *PersistentNodeController) ListDirectory(w http.ResponseWriter, r *http.Request) (context.Context, response.APIResponse) {
+	var requestBody request.ListDirectoryRequest
+	var apiResponse response.APIResponse
+
+	ctx := r.Context()
+
+	if err := helper.DecodeAndValidateRequest(r, &requestBody, controller.validator); err != nil {
+		apiResponse.Code = responsecode.CodeValidationError
+		apiResponse.Error = err.Error()
+		return ctx, apiResponse
+	}
+
+	controller.persistentNodeUsecase.ListDirectory(ctx, requestBody, &apiResponse)
 
 	return ctx, apiResponse
 }

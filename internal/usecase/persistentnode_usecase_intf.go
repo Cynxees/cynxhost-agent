@@ -20,11 +20,13 @@ type PersistentNodeUseCase interface {
 	StreamLogs(ctx context.Context, req request.GetPersistentNodeRealTimeLogsRequest, channel chan string) error
 	CreateSession(ctx context.Context, req request.StartSessionRequest, resp *response.APIResponse)
 	SendCommand(ctx context.Context, req request.SendCommandRequest, resp *response.APIResponse)
-	
+
 	// Files
 	SendSingleDockerCommand(ctx context.Context, req request.SendSingleDockerCommandRequest, resp *response.APIResponse)
-	DownloadFile(ctx context.Context, req request.DownloadFileRequest, resp *response.APIResponse)
+	DownloadFile(ctx context.Context, req request.DownloadFileRequest, resp *response.APIResponse) (file []byte, err error)
 	UploadFile(ctx context.Context, req request.UploadFileRequest, resp *response.APIResponse)
+	RemoveFile(ctx context.Context, req request.RemoveFileRequest, resp *response.APIResponse)
+	ListDirectory(ctx context.Context, req request.ListDirectoryRequest, resp *response.APIResponse)
 
 	// TMUX Console
 	// StreamTmuxLogs(ctx context.Context, resp *response.APIResponse)

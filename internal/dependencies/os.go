@@ -4,9 +4,7 @@ import (
 	"bufio"
 	"cynxhostagent/internal/model/entity"
 	"fmt"
-	"io"
 	"log"
-	"mime/multipart"
 	"os"
 	"os/exec"
 	"strings"
@@ -89,23 +87,23 @@ func (*OSManager) SetServerProperties(filePath string, serverProperties []entity
 	return writer.Flush()
 }
 
-func (*OSManager) GetFile(filePath string) ([]byte, error) {
-	return nil, nil
-}
+// func (*OSManager) GetFile(filePath string) ([]byte, error) {
+// 	return nil, nil
+// }
 
-func (*OSManager) WriteFile(filePath string, file multipart.File, header multipart.FileHeader) error {
+// func (*OSManager) WriteFile(filePath string, file multipart.File, header multipart.FileHeader) error {
 
-	dstFile, err := os.Create(filePath)
-	if err != nil {
-		return err
-	}
-	defer dstFile.Close()
+// 	dstFile, err := os.Create(filePath)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	defer dstFile.Close()
 
-	// Copy the file content from the uploaded file to the destination file
-	_, err = io.Copy(dstFile, file)
-	if err != nil {
-		return err
-	}
+// 	// Copy the file content from the uploaded file to the destination file
+// 	_, err = io.Copy(dstFile, file)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	return nil
-}
+// 	return nil
+// }

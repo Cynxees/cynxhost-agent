@@ -53,8 +53,16 @@ type DownloadFileRequest struct {
 	FilePath string `json:"file_path" validate:"required"`
 }
 
+type RemoveFileRequest struct {
+	FilePath string `json:"file_path" validate:"required"`
+}
+
 type UploadFileRequest struct {
 	DestinationPath string               `json:"destination_path" validate:"required"`
 	FileData        multipart.File       `json:"file_data" validate:"required"`
 	FileHeader      multipart.FileHeader `json:"file_header" validate:"required"`
+}
+
+type ListDirectoryRequest struct {
+	DirectoryPath string `json:"directory_path" validate:"required"`
 }
