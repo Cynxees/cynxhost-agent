@@ -23,6 +23,7 @@
       "sessionName": "cynxhost-node"
     },
     "files": {
+      "volumePath": "/home/cynxhost/cynxhost-agent",
       "minecraftLogFilePath": "/home/cynxhost/cynxhost-agent/output.log",
       "minecraftServerProperties": "/home/cynxhost/node/server.properties"
     }

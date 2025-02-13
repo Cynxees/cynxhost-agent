@@ -13,8 +13,8 @@ type PersistentNodeUseCase interface {
 	GetNodeContainerStats(ctx context.Context, resp *response.APIResponse)
 
 	// Server Properties
-	GetServerProperties(ctx context.Context, resp *response.APIResponse)
-	SetServerProperties(ctx context.Context, req request.SetServerPropertiesRequest, resp *response.APIResponse)
+	// GetServerProperties(ctx context.Context, resp *response.APIResponse)
+	// SetServerProperties(ctx context.Context, req request.SetServerPropertiesRequest, resp *response.APIResponse)
 
 	// Console
 	StreamLogs(ctx context.Context, req request.GetPersistentNodeRealTimeLogsRequest, channel chan string) error

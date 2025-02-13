@@ -2,6 +2,7 @@ package dependencies
 
 import (
 	"context"
+	"cynxhostagent/internal/model/entity"
 	"cynxhostagent/internal/repository/database"
 	"fmt"
 	"os"
@@ -13,14 +14,14 @@ import (
 
 type Config struct {
 	App struct {
-		Name             string `mapstructure:"name"`
-		Address          string `mapstructure:"address"`
-		PrivateIp        string `mapstructure:"privateIp"`
-		PublicIp         string `mapstructure:"publicIp"`
-		Port             int    `mapstructure:"port"`
-		WebsocketPort    int    `mapstructure:"websocketPort"`
-		Debug            bool   `mapstructure:"debug"`
-		PersistentNodeId *int   `mapstructure:"persistentNodeId"`
+		Name           string                   `mapstructure:"name"`
+		Address        string                   `mapstructure:"address"`
+		PrivateIp      string                   `mapstructure:"privateIp"`
+		PublicIp       string                   `mapstructure:"publicIp"`
+		Port           int                      `mapstructure:"port"`
+		WebsocketPort  int                      `mapstructure:"websocketPort"`
+		Debug          bool                     `mapstructure:"debug"`
+		PersistentNode entity.TblPersistentNode `mapstructure:"persistentNode"`
 	} `mapstructure:"app"`
 
 	Central ConfigCentral `mapstructure:"central"`
@@ -103,6 +104,7 @@ type TmuxConfig struct {
 }
 
 type DockerFilesConfig struct {
+	VolumePath                string `mapstructure:"volumePath"`
 	MinecraftLog              string `mapstructure:"minecraftLog"`
 	MinecraftServerProperties string `mapstructure:"minecraftServerProperties"`
 }
@@ -138,7 +140,7 @@ func (config *Config) LazyLoadConfig(tblInstance database.TblInstance, tblPersis
 		panic("Persistent node not found")
 	}
 
-	config.App.PersistentNodeId = &persistentNode[0].Id
+	config.App.PersistentNode = persistentNode[0]
 
 	return *config
 }

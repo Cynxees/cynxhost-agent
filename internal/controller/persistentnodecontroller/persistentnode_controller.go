@@ -12,6 +12,7 @@ import (
 	"log"
 	"net/http"
 	"path"
+	"strings"
 	"time"
 
 	"github.com/go-playground/validator/v10"
@@ -49,7 +50,7 @@ func (controller *PersistentNodeController) RunPersistentNodeTemplateScript(w ht
 		return ctx, apiResponse
 	}
 
-	requestBody.PersistentNodeId = *controller.config.App.PersistentNodeId
+	requestBody.PersistentNodeId = controller.config.App.PersistentNode.Id
 
 	requestBody.SessionUser = sessionUser
 	if err := helper.DecodeAndValidateRequest(r, &requestBody, controller.validator); err != nil {
@@ -160,32 +161,32 @@ func (controller *PersistentNodeController) CreateSession(w http.ResponseWriter,
 	return ctx, apiResponse
 }
 
-func (controller *PersistentNodeController) GetServerProperties(w http.ResponseWriter, r *http.Request) (context.Context, response.APIResponse) {
-	var apiResponse response.APIResponse
+// func (controller *PersistentNodeController) GetServerProperties(w http.ResponseWriter, r *http.Request) (context.Context, response.APIResponse) {
+// 	var apiResponse response.APIResponse
 
-	ctx := r.Context()
+// 	ctx := r.Context()
 
-	controller.persistentNodeUsecase.GetServerProperties(ctx, &apiResponse)
+// 	controller.persistentNodeUsecase.GetServerProperties(ctx, &apiResponse)
 
-	return ctx, apiResponse
-}
+// 	return ctx, apiResponse
+// }
 
-func (controller *PersistentNodeController) SetServerProperties(w http.ResponseWriter, r *http.Request) (context.Context, response.APIResponse) {
-	var requestBody request.SetServerPropertiesRequest
-	var apiResponse response.APIResponse
+// func (controller *PersistentNodeController) SetServerProperties(w http.ResponseWriter, r *http.Request) (context.Context, response.APIResponse) {
+// 	var requestBody request.SetServerPropertiesRequest
+// 	var apiResponse response.APIResponse
 
-	ctx := r.Context()
+// 	ctx := r.Context()
 
-	if err := helper.DecodeAndValidateRequest(r, &requestBody, controller.validator); err != nil {
-		apiResponse.Code = responsecode.CodeValidationError
-		apiResponse.Error = err.Error()
-		return ctx, apiResponse
-	}
+// 	if err := helper.DecodeAndValidateRequest(r, &requestBody, controller.validator); err != nil {
+// 		apiResponse.Code = responsecode.CodeValidationError
+// 		apiResponse.Error = err.Error()
+// 		return ctx, apiResponse
+// 	}
 
-	controller.persistentNodeUsecase.SetServerProperties(ctx, requestBody, &apiResponse)
+// 	controller.persistentNodeUsecase.SetServerProperties(ctx, requestBody, &apiResponse)
 
-	return ctx, apiResponse
-}
+// 	return ctx, apiResponse
+// }
 
 func (controller *PersistentNodeController) GetNodeContainerStats(w http.ResponseWriter, r *http.Request) (context.Context, response.APIResponse) {
 	var apiResponse response.APIResponse
@@ -254,6 +255,13 @@ func (controller *PersistentNodeController) UploadFile(w http.ResponseWriter, r 
 	if err := helper.DecodeAndValidateRequest(r, &requestBody, controller.validator); err != nil {
 		apiResponse.Code = responsecode.CodeValidationError
 		apiResponse.Error = err.Error()
+		return ctx, apiResponse
+	}
+
+	// Check if filename contains a path
+	if strings.Contains(requestBody.FileName, "/") {
+		apiResponse.Code = responsecode.CodeValidationError
+		apiResponse.Error = "Invalid filename: " + requestBody.FileName
 		return ctx, apiResponse
 	}
 

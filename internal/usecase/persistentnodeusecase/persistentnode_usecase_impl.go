@@ -12,7 +12,6 @@ import (
 	"cynxhostagent/internal/repository/micro/cynxhostcentral"
 	"cynxhostagent/internal/usecase"
 	"fmt"
-	"math/rand/v2"
 	"strconv"
 
 	"github.com/sirupsen/logrus"
@@ -131,79 +130,27 @@ func (usecase *PersistentNodeUseCaseImpl) RunPersistentNodeTemplateScript(ctx co
 	resp.Code = responsecode.CodeSuccess
 }
 
-func (usecase *PersistentNodeUseCaseImpl) GetServerProperties(ctx context.Context, resp *response.APIResponse) {
-	properties, err := usecase.osManager.ReadServerProperties(usecase.config.DockerConfig.Files.MinecraftServerProperties)
-	if err != nil {
-		resp.Error = fmt.Sprintf("Error reading server.properties: %v", err)
-		resp.Code = responsecode.CodeFailed
-		return
-	}
-	resp.Code = responsecode.CodeSuccess
-	resp.Data = properties
-}
+// func (usecase *PersistentNodeUseCaseImpl) GetServerProperties(ctx context.Context, resp *response.APIResponse) {
+// 	properties, err := usecase.osManager.ReadServerProperties(usecase.config.DockerConfig.Files.MinecraftServerProperties)
+// 	if err != nil {
+// 		resp.Error = fmt.Sprintf("Error reading server.properties: %v", err)
+// 		resp.Code = responsecode.CodeFailed
+// 		return
+// 	}
+// 	resp.Code = responsecode.CodeSuccess
+// 	resp.Data = properties
+// }
 
-func (usecase *PersistentNodeUseCaseImpl) SetServerProperties(ctx context.Context, req request.SetServerPropertiesRequest, resp *response.APIResponse) {
+// func (usecase *PersistentNodeUseCaseImpl) SetServerProperties(ctx context.Context, req request.SetServerPropertiesRequest, resp *response.APIResponse) {
 
-	err := usecase.osManager.SetServerProperties(usecase.config.DockerConfig.Files.MinecraftServerProperties, req.ServerProperties)
-	if err != nil {
-		resp.Error = fmt.Sprintf("Error reading server.properties: %v", err)
-		resp.Code = responsecode.CodeFailed
-		return
-	}
-	resp.Code = responsecode.CodeSuccess
-}
-
-func (uc *PersistentNodeUseCaseImpl) StreamLogs(ctx context.Context, req request.GetPersistentNodeRealTimeLogsRequest, channel chan string) error {
-	// Start streaming logs from a specific container
-	go func() {
-		// Start the interactive session
-		err := uc.dockerManager.StreamOutput(req.SessionId, channel)
-		if err != nil {
-			fmt.Println("Error starting interactive session:", err)
-			channel <- fmt.Sprintf("Error starting interactive session: %v", err)
-			return
-		}
-
-		// Stream the logs and send them to the channel
-		// Assuming the `StartInteractiveSession` is configured to stream logs to a WebSocket channel
-		for logLine := range channel {
-			// Sending logs to the channel for WebSocket transmission
-			channel <- logLine
-		}
-	}()
-
-	return nil
-}
-
-func (uc *PersistentNodeUseCaseImpl) CreateSession(ctx context.Context, req request.StartSessionRequest, resp *response.APIResponse) {
-	// Create a new interactive session
-	uniqueCode := strconv.Itoa(rand.Int())
-	fmt.Println("Creating new session with code ", uniqueCode)
-	err := uc.dockerManager.CreateNewSession(uniqueCode, uc.config.DockerConfig.ContainerName, req.Shell)
-	if err != nil {
-		resp.Code = responsecode.CodeDockerError
-		resp.Error = fmt.Sprintf("Error creating new session: %v", err)
-		return
-	}
-
-	resp.Code = responsecode.CodeSuccess
-	resp.Data = responsedata.CreateSessionResponseData{
-		SessionId: uniqueCode,
-	}
-}
-
-func (uc *PersistentNodeUseCaseImpl) SendCommand(ctx context.Context, req request.SendCommandRequest, resp *response.APIResponse) {
-
-	// Send the command to the Docker container
-	err := uc.dockerManager.SendCommand(req.SessionId, req.Command, req.IsBase64Encoded)
-	if err != nil {
-		resp.Code = responsecode.CodeDockerError
-		resp.Error = fmt.Sprintf("Error sending command to Docker container: %v", err)
-		return
-	}
-
-	resp.Code = responsecode.CodeSuccess
-}
+// 	err := usecase.osManager.SetServerProperties(usecase.config.DockerConfig.Files.MinecraftServerProperties, req.ServerProperties)
+// 	if err != nil {
+// 		resp.Error = fmt.Sprintf("Error reading server.properties: %v", err)
+// 		resp.Code = responsecode.CodeFailed
+// 		return
+// 	}
+// 	resp.Code = responsecode.CodeSuccess
+// }
 
 func (uc *PersistentNodeUseCaseImpl) GetNodeContainerStats(ctx context.Context, resp *response.APIResponse) {
 
@@ -258,60 +205,5 @@ func (uc *PersistentNodeUseCaseImpl) SendSingleDockerCommand(ctx context.Context
 	resp.Code = responsecode.CodeSuccess
 	resp.Data = responsedata.SendSingleDockerCommandResponseData{
 		Output: output,
-	}
-}
-
-func (uc *PersistentNodeUseCaseImpl) DownloadFile(ctx context.Context, req request.DownloadFileRequest, resp *response.APIResponse) (file []byte, err error) {
-	// Download the file from the server
-	fileData, err := uc.dockerManager.GetFile(uc.config.DockerConfig.ContainerName, req.FilePath)
-
-	if err != nil {
-		resp.Code = responsecode.CodeOsError
-		resp.Error = fmt.Sprintf("Error reading file: %v", err)
-		return nil, err
-	}
-
-	resp.Code = responsecode.CodeSuccess
-	return fileData, nil
-
-}
-
-func (uc *PersistentNodeUseCaseImpl) UploadFile(ctx context.Context, req request.UploadFileRequest, resp *response.APIResponse) {
-
-	// Upload the file to the server
-	err := uc.dockerManager.WriteFile(req.DestinationPath, req.FileData, req.FileHeader, uc.config.DockerConfig.ContainerName)
-	if err != nil {
-		resp.Code = responsecode.CodeOsError
-		resp.Error = fmt.Sprintf("Error writing file: %v", err)
-		return
-	}
-
-	resp.Code = responsecode.CodeSuccess
-}
-
-func (uc *PersistentNodeUseCaseImpl) RemoveFile(ctx context.Context, req request.RemoveFileRequest, resp *response.APIResponse) {
-	// Remove the file from the server
-	err := uc.dockerManager.RemoveFile(uc.config.DockerConfig.ContainerName, req.FilePath)
-	if err != nil {
-		resp.Code = responsecode.CodeOsError
-		resp.Error = fmt.Sprintf("Error removing file: %v", err)
-		return
-	}
-
-	resp.Code = responsecode.CodeSuccess
-}
-
-func (uc *PersistentNodeUseCaseImpl) ListDirectory(ctx context.Context, req request.ListDirectoryRequest, resp *response.APIResponse) {
-	// List the directory contents
-	files, err := uc.dockerManager.ListDirectory(uc.config.DockerConfig.ContainerName, req.DirectoryPath)
-	if err != nil {
-		resp.Code = responsecode.CodeOsError
-		resp.Error = fmt.Sprintf("Error listing directory: %v", err)
-		return
-	}
-
-	resp.Code = responsecode.CodeSuccess
-	resp.Data = responsedata.ListDirectoryResponseData{
-		Files: files,
 	}
 }

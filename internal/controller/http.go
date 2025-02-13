@@ -91,8 +91,9 @@ func NewHttpServer(app *app.App) (*HttpServer, error) {
 	handleDefaultRouterFunc("persistent-node/dashboard/files/remove-file", persistentNodeController.RemoveFile, false)
 	handleDefaultRouterFunc("persistent-node/dashboard/files/list-directory", persistentNodeController.ListDirectory, false)
 
-	handleDefaultRouterFunc("persistent-node/dashboard/properties/get", persistentNodeController.GetServerProperties, false)
-	handleDefaultRouterFunc("persistent-node/dashboard/properties/set", persistentNodeController.SetServerProperties, false)
+	// Server Properties
+	// handleDefaultRouterFunc("persistent-node/dashboard/properties/get", persistentNodeController.GetServerProperties, false)
+	// handleDefaultRouterFunc("persistent-node/dashboard/properties/set", persistentNodeController.SetServerProperties, false)
 
 	// Websocket
 	handleWebsocketFunc("persistent-node/logs", persistentNodeController.GetPersistentNodeRealTimeLogs)
