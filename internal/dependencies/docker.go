@@ -10,6 +10,7 @@ import (
 	"mime/multipart"
 	"os"
 	"os/exec"
+	"strings"
 	"sync"
 
 	"github.com/creack/pty"
@@ -252,4 +253,56 @@ func (*DockerManager) ListDirectory(containerName, containerDirPath string) ([]s
 	}
 
 	return files, nil
+}
+
+func (*DockerManager) UploadImageToAwsEcr(containerName, imageName, tag string, ecrConfig EcrConfig) error {
+
+	ecrImage := fmt.Sprintf("%s:%s", ecrConfig.Registry, tag)
+
+	// Save the image to a tar file
+	fmt.Println("Saving image to tar file...")
+	cmd := exec.Command("docker", "save", "-o", imageName+".tar", imageName)
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("failed to save image to tar file: %v", err)
+	}
+
+	// Load the image back from the tar file
+	fmt.Println("Loading image from tar file...")
+	cmd = exec.Command("docker", "load", "-i", imageName+".tar")
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("failed to load image from tar file: %v", err)
+	}
+
+	// Tag the image for ECR
+	fmt.Println("Tagging image for ECR...")
+	cmd = exec.Command("docker", "tag", imageName, ecrImage)
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("failed to tag image: %v", err)
+	}
+
+	// Get ECR login password
+	fmt.Println("Getting ECR login password...")
+	cmd = exec.Command("aws", "ecr", "get-login-password", "--region", ecrConfig.Region)
+	password, err := cmd.Output()
+	if err != nil {
+		return fmt.Errorf("failed to get ECR login password: %v", err)
+	}
+
+	// Login to ECR
+	fmt.Println("Logging into ECR...")
+	cmd = exec.Command("docker", "login", "--username", ecrConfig.Username, "--password-stdin", ecrConfig.Registry)
+	cmd.Stdin = strings.NewReader(string(password))
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("failed to login to ECR: %v", err)
+	}
+
+	// Push the image to ECR
+	fmt.Println("Pushing image to ECR...")
+	cmd = exec.Command("docker", "push", ecrImage)
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("failed to push image to ECR: %v", err)
+	}
+
+	fmt.Println("Image successfully pushed to ECR:", ecrImage)
+	return nil
 }

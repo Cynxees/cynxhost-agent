@@ -12,10 +12,6 @@ type PersistentNodeUseCase interface {
 	RunPersistentNodeTemplateScript(ctx context.Context, req request.RunPersistentNodeTemplateScriptRequest, resp *response.APIResponse)
 	GetNodeContainerStats(ctx context.Context, resp *response.APIResponse)
 
-	// Server Properties
-	// GetServerProperties(ctx context.Context, resp *response.APIResponse)
-	// SetServerProperties(ctx context.Context, req request.SetServerPropertiesRequest, resp *response.APIResponse)
-
 	// Console
 	StreamLogs(ctx context.Context, req request.GetPersistentNodeRealTimeLogsRequest, channel chan string) error
 	CreateSession(ctx context.Context, req request.StartSessionRequest, resp *response.APIResponse)
@@ -27,6 +23,13 @@ type PersistentNodeUseCase interface {
 	UploadFile(ctx context.Context, req request.UploadFileRequest, resp *response.APIResponse)
 	RemoveFile(ctx context.Context, req request.RemoveFileRequest, resp *response.APIResponse)
 	ListDirectory(ctx context.Context, req request.ListDirectoryRequest, resp *response.APIResponse)
+
+	// Backup
+	BackupImage(ctx context.Context, resp *response.APIResponse)
+
+	// Server Properties
+	// GetServerProperties(ctx context.Context, resp *response.APIResponse)
+	// SetServerProperties(ctx context.Context, req request.SetServerPropertiesRequest, resp *response.APIResponse)
 
 	// TMUX Console
 	// StreamTmuxLogs(ctx context.Context, resp *response.APIResponse)

@@ -28,6 +28,8 @@ type Config struct {
 
 	DockerConfig DockerConfig `mapstructure:"docker"`
 
+	Ecr EcrConfig `mapstructure:"ecr"`
+
 	Router struct {
 		Default string `mapstructure:"default"`
 	} `mapstructure:"router"`
@@ -117,6 +119,13 @@ type DockerConfig struct {
 	Password      string            `mapstructure:"password"`
 	TmuxConfig    TmuxConfig        `mapstructure:"tmux"`
 	Files         DockerFilesConfig `mapstructure:"files"`
+}
+
+type EcrConfig struct {
+	Region   string `mapstructure:"region"`
+	Username string `mapstructure:"username"`
+	Password string `mapstructure:"password"`
+	Registry string `mapstructure:"registry"`
 }
 
 func (config *Config) LazyLoadConfig(tblInstance database.TblInstance, tblPersistentNode database.TblPersistentNode) Config {
