@@ -1,5 +1,7 @@
 package responsedata
 
+import "cynxhostagent/internal/model/entity"
+
 type AuthResponseData struct {
 	AccessToken string
 	TokenType   string
@@ -34,4 +36,8 @@ type File struct {
 	CreatedAt string `json:"created_at"`
 	UpdatedAt string `json:"updated_at"`
 	Size      int64  `json:"size"`
+}
+
+type ListPersistentNodeImagesResponseData struct {
+	Images []entity.TblPersistentNodeImage
 }

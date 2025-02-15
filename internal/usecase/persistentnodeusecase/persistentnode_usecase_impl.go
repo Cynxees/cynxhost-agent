@@ -18,11 +18,12 @@ import (
 )
 
 type PersistentNodeUseCaseImpl struct {
-	tblPersistentNode database.TblPersistentNode
-	tblInstance       database.TblInstance
-	tblInstanceType   database.TblInstanceType
-	tblStorage        database.TblStorage
-	tblServerTemplate database.TblServerTemplate
+	tblPersistentNode      database.TblPersistentNode
+	tblPersistentNodeImage database.TblPersistentNodeImage
+	tblInstance            database.TblInstance
+	tblInstanceType        database.TblInstanceType
+	tblStorage             database.TblStorage
+	tblServerTemplate      database.TblServerTemplate
 
 	awsClient       *dependencies.AWSClient
 	cynxhostcentral *cynxhostcentral.CynxhostCentral
@@ -33,14 +34,15 @@ type PersistentNodeUseCaseImpl struct {
 	dockerManager *dependencies.DockerManager
 }
 
-func New(tblPersistentNode database.TblPersistentNode, tblInstance database.TblInstance, tblInstanceType database.TblInstanceType, tblStorage database.TblStorage, tblServerTemplate database.TblServerTemplate, awsClient *dependencies.AWSClient, logger *logrus.Logger, config *dependencies.Config, osManager *dependencies.OSManager, dockerManager *dependencies.DockerManager, cynxhostCentral *cynxhostcentral.CynxhostCentral) usecase.PersistentNodeUseCase {
+func New(tblPersistentNode database.TblPersistentNode, tblPersistentNodeImage database.TblPersistentNodeImage, tblInstance database.TblInstance, tblInstanceType database.TblInstanceType, tblStorage database.TblStorage, tblServerTemplate database.TblServerTemplate, awsClient *dependencies.AWSClient, logger *logrus.Logger, config *dependencies.Config, osManager *dependencies.OSManager, dockerManager *dependencies.DockerManager, cynxhostCentral *cynxhostcentral.CynxhostCentral) usecase.PersistentNodeUseCase {
 
 	return &PersistentNodeUseCaseImpl{
-		tblPersistentNode: tblPersistentNode,
-		tblStorage:        tblStorage,
-		tblServerTemplate: tblServerTemplate,
-		tblInstance:       tblInstance,
-		tblInstanceType:   tblInstanceType,
+		tblPersistentNode:      tblPersistentNode,
+		tblPersistentNodeImage: tblPersistentNodeImage,
+		tblStorage:             tblStorage,
+		tblServerTemplate:      tblServerTemplate,
+		tblInstance:            tblInstance,
+		tblInstanceType:        tblInstanceType,
 
 		awsClient:       awsClient,
 		cynxhostcentral: cynxhostCentral,

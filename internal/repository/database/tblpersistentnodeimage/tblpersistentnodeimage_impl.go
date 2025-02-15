@@ -2,8 +2,8 @@ package tblpersistentnodeimage
 
 import (
 	"context"
-	"cynxhost/internal/model/entity"
-	"cynxhost/internal/repository/database"
+	"cynxhostagent/internal/model/entity"
+	"cynxhostagent/internal/repository/database"
 
 	"gorm.io/gorm"
 )

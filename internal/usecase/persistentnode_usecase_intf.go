@@ -26,6 +26,7 @@ type PersistentNodeUseCase interface {
 
 	// Backup
 	BackupImage(ctx context.Context, resp *response.APIResponse)
+	ListImages(ctx context.Context, resp *response.APIResponse)
 
 	// Server Properties
 	// GetServerProperties(ctx context.Context, resp *response.APIResponse)
