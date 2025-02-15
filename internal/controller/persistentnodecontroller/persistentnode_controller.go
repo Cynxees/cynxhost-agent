@@ -206,14 +206,14 @@ func (controller *PersistentNodeController) DownloadFile(w http.ResponseWriter, 
 	if err := helper.DecodeAndValidateRequest(r, &requestBody, controller.validator); err != nil {
 		apiResponse.Code = responsecode.CodeValidationError
 		apiResponse.Error = err.Error()
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		helper.WriteJSONResponse(w, http.StatusOK, apiResponse)
 		return
 	}
 
 	// Get the file content
 	fileContent, err := controller.persistentNodeUsecase.DownloadFile(r.Context(), requestBody, &apiResponse)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Error downloading file: %s", err.Error()), http.StatusInternalServerError)
+		helper.WriteJSONResponse(w, http.StatusOK, apiResponse)
 		return
 	}
 
@@ -294,6 +294,7 @@ func (controller *PersistentNodeController) ListDirectory(w http.ResponseWriter,
 	ctx := r.Context()
 
 	if err := helper.DecodeAndValidateRequest(r, &requestBody, controller.validator); err != nil {
+
 		apiResponse.Code = responsecode.CodeValidationError
 		apiResponse.Error = err.Error()
 		return ctx, apiResponse

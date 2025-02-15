@@ -15,7 +15,8 @@ import (
 )
 
 func DecodeAndValidateRequest(r *http.Request, dst interface{}, v *validator.Validate) error {
-	if r.Header.Get("Content-Type") != "" && r.Header.Get("Content-Type")[:19] == "multipart/form-data" {
+	contentType := r.Header.Get("Content-Type")
+	if strings.Contains(contentType, "multipart/form-data") {
 		return decodeMultipartForm(r, dst, v)
 	}
 

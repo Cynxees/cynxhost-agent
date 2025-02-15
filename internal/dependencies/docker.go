@@ -3,6 +3,7 @@ package dependencies
 import (
 	"bytes"
 	"context"
+	"cynxhostagent/internal/model/response/responsedata"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -10,6 +11,8 @@ import (
 	"mime/multipart"
 	"os"
 	"os/exec"
+	"path"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -179,9 +182,13 @@ func (m *DockerManager) SendSingleDockerCommand(containerNameOrId string, comman
 	return output.String(), nil
 }
 
-func (*DockerManager) WriteFile(filePath string, file multipart.File, header multipart.FileHeader, containerName string) error {
-	// Create a temporary file on the host to store the uploaded file
-	tmpFile, err := os.CreateTemp("", "upload-*.tmp")
+func (*DockerManager) WriteFile(filePath string, file multipart.File, header multipart.FileHeader, containerName string, fileName string) error {
+	// Create a temporary file path with the original file name in the OS temporary directory
+	tempDir := os.TempDir()
+	tmpFilePath := path.Join(tempDir, fileName)
+
+	// Create (or overwrite) the temporary file with the desired name
+	tmpFile, err := os.Create(tmpFilePath)
 	if err != nil {
 		return fmt.Errorf("failed to create temporary file: %v", err)
 	}
@@ -193,12 +200,16 @@ func (*DockerManager) WriteFile(filePath string, file multipart.File, header mul
 		return fmt.Errorf("failed to copy file content: %v", err)
 	}
 
-	// Use the docker cp command to copy the file from the host to the container
-	cmd := exec.Command("docker", "cp", tmpFile.Name(), fmt.Sprintf("%s:%s", containerName, filePath))
+	// Use the docker cp command to copy the file from the host to the container.
+	// Make sure filePath in the container includes the desired file name.
+	cmd := exec.Command("docker", "cp", tmpFilePath, fmt.Sprintf("%s:%s", containerName, filePath))
 	err = cmd.Run()
 	if err != nil {
 		return fmt.Errorf("failed to copy file to container: %v", err)
 	}
+
+	// Optionally, remove the temporary file after copying it into the container.
+	_ = os.Remove(tmpFilePath)
 
 	return nil
 }
@@ -238,21 +249,56 @@ func (*DockerManager) RemoveFile(containerName, containerFilePath string) error 
 	return nil
 }
 
-func (*DockerManager) ListDirectory(containerName, containerDirPath string) ([]string, error) {
-	// Use the docker exec command to list the files in the directory
-	cmd := exec.Command("docker", "exec", containerName, "ls", containerDirPath)
-	output, err := cmd.Output()
+func (dm *DockerManager) ListDirectory(containerName, containerDirPath string) ([]responsedata.File, error) {
+	// List file names in the directory
+	lsCmd := exec.Command("docker", "exec", containerName, "ls", containerDirPath)
+	output, err := lsCmd.Output()
 	if err != nil {
 		return nil, fmt.Errorf("failed to list directory: %v", err)
 	}
 
-	// Split the output into individual file names
-	files := make([]string, 0)
-	for _, file := range bytes.Fields(output) {
-		files = append(files, string(file))
+	// Split the output into file names
+	fileNames := bytes.Fields(output)
+	if len(fileNames) == 0 {
+		return []responsedata.File{}, nil // Return empty slice if directory is empty
 	}
 
-	return files, nil
+	var details []responsedata.File
+	for _, f := range fileNames {
+		filename := string(f)
+		// Build full path of the file in the container
+		fullPath := path.Join(containerDirPath, filename)
+
+		// Use stat to get file details.
+		// The format here is: filename|creation_time|modification_time|size
+		// Note: %w returns the birth time if available, or a hyphen ("-")
+		statCmd := exec.Command("docker", "exec", containerName, "stat", "--format=%n|%w|%y|%s", fullPath)
+		statOutput, err := statCmd.Output()
+		if err != nil {
+			return nil, fmt.Errorf("failed to stat file %s: %v", fullPath, err)
+		}
+
+		// Parse the output; expected format: <name>|<createdAt>|<updatedAt>|<size>
+		parts := strings.Split(strings.TrimSpace(string(statOutput)), "|")
+		if len(parts) != 4 {
+			return nil, fmt.Errorf("unexpected stat output for %s: %s", fullPath, string(statOutput))
+		}
+
+		size, err := strconv.ParseInt(parts[3], 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse size for %s: %v", fullPath, err)
+		}
+
+		detail := responsedata.File{
+			Filename:  parts[0],
+			CreatedAt: parts[1],
+			UpdatedAt: parts[2],
+			Size:      size,
+		}
+		details = append(details, detail)
+	}
+
+	return details, nil
 }
 
 func (*DockerManager) UploadImageToAwsEcr(containerName, imageName, tag string, ecrConfig EcrConfig) error {

@@ -12,7 +12,6 @@ import (
 func (uc *PersistentNodeUseCaseImpl) DownloadFile(ctx context.Context, req request.DownloadFileRequest, resp *response.APIResponse) (file []byte, err error) {
 	// Download the file from the server
 	fileData, err := uc.dockerManager.GetFile(uc.config.DockerConfig.ContainerName, req.FilePath)
-
 	if err != nil {
 		resp.Code = responsecode.CodeDockerError
 		resp.Error = fmt.Sprintf("Error reading file: %v", err)
@@ -27,7 +26,7 @@ func (uc *PersistentNodeUseCaseImpl) DownloadFile(ctx context.Context, req reque
 func (uc *PersistentNodeUseCaseImpl) UploadFile(ctx context.Context, req request.UploadFileRequest, resp *response.APIResponse) {
 
 	// Upload the file to the server
-	err := uc.dockerManager.WriteFile(req.DestinationPath, req.FileData, req.FileHeader, uc.config.DockerConfig.ContainerName)
+	err := uc.dockerManager.WriteFile(req.DestinationPath, req.FileData, req.FileHeader, uc.config.DockerConfig.ContainerName, req.FileName)
 	if err != nil {
 		resp.Code = responsecode.CodeDockerError
 		resp.Error = fmt.Sprintf("Error writing file: %v", err)

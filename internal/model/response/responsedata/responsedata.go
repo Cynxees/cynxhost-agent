@@ -26,5 +26,12 @@ type SendSingleDockerCommandResponseData struct {
 }
 
 type ListDirectoryResponseData struct {
-	Files []string
+	Files []File
+}
+
+type File struct {
+	Filename  string `json:"filename"`
+	CreatedAt string `json:"created_at"`
+	UpdatedAt string `json:"updated_at"`
+	Size      int64  `json:"size"`
 }

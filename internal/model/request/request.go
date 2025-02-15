@@ -61,7 +61,7 @@ type UploadFileRequest struct {
 	DestinationPath string               `json:"destination_path" validate:"required"`
 	FileName        string               `json:"file_name" validate:"required"`
 	FileData        multipart.File       `json:"file_data" validate:"required"`
-	FileHeader      multipart.FileHeader `json:"file_header" validate:"required"`
+	FileHeader      multipart.FileHeader `json:"file_data	" validate:"required"`
 }
 
 type ListDirectoryRequest struct {
