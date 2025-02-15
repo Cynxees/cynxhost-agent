@@ -28,8 +28,6 @@ type Config struct {
 
 	DockerConfig DockerConfig `mapstructure:"docker"`
 
-	Ecr EcrConfig `mapstructure:"ecr"`
-
 	Router struct {
 		Default string `mapstructure:"default"`
 	} `mapstructure:"router"`
@@ -77,8 +75,7 @@ type Config struct {
 	} `mapstructure:"logging"`
 
 	Aws struct {
-		AccessKeyId     string `mapstructure:"accessKeyId"`
-		AccessKeySecret string `mapstructure:"accessKeySecret"`
+		Ecr EcrConfig `mapstructure:"ecr"`
 	} `mapstructure:"aws"`
 
 	Security struct {

@@ -31,11 +31,13 @@
   "router": {
     "default": "/cynxapi/v1/"
   },
-  "ecr": {
-    "region": "ap-southeast-1",
-    "username": "AWS",
-    "password": "",
-    "registry": "242201306378.dkr.ecr.ap-southeast-1.amazonaws.com"
+  "Aws": {
+    "ecr": {
+      "region": "ap-southeast-1",
+      "username": "AWS",
+      "password": "",
+      "registry": "242201306378.dkr.ecr.ap-southeast-1.amazonaws.com"
+    }
   },
   "database": {
     "mysql": {
@@ -65,7 +67,13 @@
     },
     "cors": {
       "enabled": true,
-      "origins": ["http://localhost:3000", "https://cynxhost-web.vercel.app", "https://localhost:3000", "https://web.cynx.buzz:3000", "https://app.cynx.buzz"],
+      "origins": [
+        "http://localhost:3000",
+        "https://cynxhost-web.vercel.app",
+        "https://localhost:3000",
+        "https://web.cynx.buzz:3000",
+        "https://app.cynx.buzz"
+      ],
       "domain": ""
     }
   }

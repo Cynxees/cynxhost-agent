@@ -46,7 +46,8 @@ func NewDependencies(configPath string) *Dependencies {
 	redis := dependencies.NewRedisClient(config)
 
 	logger.Infoln("Connecting to AWS")
-	awsManager := dependencies.NewAWSClient(config.Aws.AccessKeyId, config.Aws.AccessKeySecret)
+	awsManager := dependencies.NewAWSClient("", "")
+	// awsManager := dependencies.NewAWSClient(config.Aws.AccessKeyId, config.Aws.AccessKeySecret)
 
 	logger.Infoln("Connecting to JWT")
 	jwtManager := dependencies.NewJWTManager(config.Security.JWT.Secret, time.Hour*time.Duration(config.Security.JWT.ExpiresInHour))
