@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"strings"
 	"text/template"
+	"time"
 
 	"github.com/go-playground/validator/v10"
 )
@@ -113,4 +114,8 @@ func GetClientIP(r *http.Request) string {
 		return r.RemoteAddr
 	}
 	return ip
+}
+
+func GetCurrentTimestampYYYYMMDDHHMMSS() string {
+	return time.Now().Format("20060102150405")
 }

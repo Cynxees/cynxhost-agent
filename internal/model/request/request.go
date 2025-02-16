@@ -67,3 +67,11 @@ type UploadFileRequest struct {
 type ListDirectoryRequest struct {
 	DirectoryPath string `json:"directory_path" validate:"required"`
 }
+
+type CreateDirectoryRequest struct {
+	DirectoryPath string `json:"directory_path" validate:"required"`
+}
+
+type RemoveDirectoryRequest struct {
+	DirectoryPath string `json:"directory_path" validate:"required"`
+}

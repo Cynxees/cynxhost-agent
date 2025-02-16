@@ -4,6 +4,7 @@ type StorageStatus string
 type InstanceTypeStatus string
 type InstanceStatus string
 type PersistentNodeStatus string
+type PersistentNodeImageStatus string
 
 const (
 	StorageStatusInUseRunningInstance  StorageStatus = "IN_USE:RUNNING_INSTANCE"
@@ -31,4 +32,8 @@ const (
 	InstanceStatusCreate   InstanceStatus = "CREATING"
 	InstanceStatusActive   InstanceStatus = "ACTIVE"
 	InstanceStatusInactive InstanceStatus = "INACTIVE"
+)
+
+const (
+	PersistentNodeImageStatusActive PersistentNodeImageStatus = "ACTIVE"
 )

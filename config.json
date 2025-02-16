@@ -32,11 +32,14 @@
     "default": "/cynxapi/v1/"
   },
   "Aws": {
+    "accessKeyId": "${AWS_ACCESS_KEY_ID}",
+    "accessKeySecret": "${AWS_ACCESS_KEY_SECRET}",
     "ecr": {
       "region": "ap-southeast-1",
       "username": "AWS",
       "password": "",
-      "registry": "242201306378.dkr.ecr.ap-southeast-1.amazonaws.com"
+      "registry": "242201306378.dkr.ecr.ap-southeast-1.amazonaws.com",
+      "repositoryPrefix": "persistent-node"
     }
   },
   "database": {

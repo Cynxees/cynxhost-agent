@@ -304,3 +304,57 @@ func (controller *PersistentNodeController) ListDirectory(w http.ResponseWriter,
 
 	return ctx, apiResponse
 }
+
+func (controller *PersistentNodeController) CreateDirectory(w http.ResponseWriter, r *http.Request) (context.Context, response.APIResponse) {
+	var requestBody request.CreateDirectoryRequest
+	var apiResponse response.APIResponse
+
+	ctx := r.Context()
+
+	if err := helper.DecodeAndValidateRequest(r, &requestBody, controller.validator); err != nil {
+		apiResponse.Code = responsecode.CodeValidationError
+		apiResponse.Error = err.Error()
+		return ctx, apiResponse
+	}
+
+	controller.persistentNodeUsecase.CreateDirectory(ctx, requestBody, &apiResponse)
+
+	return ctx, apiResponse
+}
+
+func (controller *PersistentNodeController) RemoveDirectory(w http.ResponseWriter, r *http.Request) (context.Context, response.APIResponse) {
+	var requestBody request.RemoveDirectoryRequest
+	var apiResponse response.APIResponse
+
+	ctx := r.Context()
+
+	if err := helper.DecodeAndValidateRequest(r, &requestBody, controller.validator); err != nil {
+		apiResponse.Code = responsecode.CodeValidationError
+		apiResponse.Error = err.Error()
+		return ctx, apiResponse
+	}
+
+	controller.persistentNodeUsecase.RemoveDirectory(ctx, requestBody, &apiResponse)
+
+	return ctx, apiResponse
+}
+
+func (controller *PersistentNodeController) PushImage(w http.ResponseWriter, r *http.Request) (context.Context, response.APIResponse) {
+	var apiResponse response.APIResponse
+
+	ctx := r.Context()
+
+	controller.persistentNodeUsecase.PushImage(ctx, &apiResponse)
+
+	return ctx, apiResponse
+}
+
+func (controller *PersistentNodeController) ListImages(w http.ResponseWriter, r *http.Request) (context.Context, response.APIResponse) {
+	var apiResponse response.APIResponse
+
+	ctx := r.Context()
+
+	controller.persistentNodeUsecase.ListImages(ctx, &apiResponse)
+
+	return ctx, apiResponse
+}

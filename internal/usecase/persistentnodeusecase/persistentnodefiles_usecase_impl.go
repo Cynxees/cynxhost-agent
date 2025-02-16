@@ -62,3 +62,27 @@ func (uc *PersistentNodeUseCaseImpl) ListDirectory(ctx context.Context, req requ
 		Files: files,
 	}
 }
+
+func (uc *PersistentNodeUseCaseImpl) CreateDirectory(ctx context.Context, req request.CreateDirectoryRequest, resp *response.APIResponse) {
+	// Create the directory
+	err := uc.dockerManager.CreateDirectory(uc.config.DockerConfig.ContainerName, req.DirectoryPath)
+	if err != nil {
+		resp.Code = responsecode.CodeDockerError
+		resp.Error = fmt.Sprintf("Error creating directory: %v", err)
+		return
+	}
+
+	resp.Code = responsecode.CodeSuccess
+}
+
+func (uc *PersistentNodeUseCaseImpl) RemoveDirectory(ctx context.Context, req request.RemoveDirectoryRequest, resp *response.APIResponse) {
+	// Remove the directory
+	err := uc.dockerManager.RemoveDirectory(uc.config.DockerConfig.ContainerName, req.DirectoryPath)
+	if err != nil {
+		resp.Code = responsecode.CodeDockerError
+		resp.Error = fmt.Sprintf("Error removing directory: %v", err)
+		return
+	}
+
+	resp.Code = responsecode.CodeSuccess
+}

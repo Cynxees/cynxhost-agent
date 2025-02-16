@@ -23,9 +23,11 @@ type PersistentNodeUseCase interface {
 	UploadFile(ctx context.Context, req request.UploadFileRequest, resp *response.APIResponse)
 	RemoveFile(ctx context.Context, req request.RemoveFileRequest, resp *response.APIResponse)
 	ListDirectory(ctx context.Context, req request.ListDirectoryRequest, resp *response.APIResponse)
+	CreateDirectory(ctx context.Context, req request.CreateDirectoryRequest, resp *response.APIResponse)
+	RemoveDirectory(ctx context.Context, req request.RemoveDirectoryRequest, resp *response.APIResponse)
 
 	// Backup
-	BackupImage(ctx context.Context, resp *response.APIResponse)
+	PushImage(ctx context.Context, resp *response.APIResponse)
 	ListImages(ctx context.Context, resp *response.APIResponse)
 
 	// Server Properties

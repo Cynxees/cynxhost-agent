@@ -249,6 +249,28 @@ func (*DockerManager) RemoveFile(containerName, containerFilePath string) error 
 	return nil
 }
 
+func (*DockerManager) CreateDirectory(containerName, containerDirPath string) error {
+	// Use the docker exec command to create a directory in the container
+	cmd := exec.Command("docker", "exec", containerName, "mkdir", containerDirPath)
+	err := cmd.Run()
+	if err != nil {
+		return fmt.Errorf("failed to create directory in container: %v", err)
+	}
+
+	return nil
+}
+
+func (*DockerManager) RemoveDirectory(containerName, containerDirPath string) error {
+	// Use the docker exec command to remove the directory from the container
+	cmd := exec.Command("docker", "exec", containerName, "rm", "-rf", containerDirPath)
+	err := cmd.Run()
+	if err != nil {
+		return fmt.Errorf("failed to remove directory from container: %v", err)
+	}
+
+	return nil
+}
+
 func (dm *DockerManager) ListDirectory(containerName, containerDirPath string) ([]responsedata.File, error) {
 	// List file names in the directory
 	lsCmd := exec.Command("docker", "exec", containerName, "ls", containerDirPath)
@@ -301,52 +323,46 @@ func (dm *DockerManager) ListDirectory(containerName, containerDirPath string) (
 	return details, nil
 }
 
-func (*DockerManager) UploadImageToAwsEcr(containerName, imageName, tag string, ecrConfig EcrConfig) error {
+func (*DockerManager) UploadImageToAwsEcr(containerName, repositoryName, imageTag string, ecrConfig EcrConfig) error {
+	// Define the full ECR image reference (e.g., <registry>/<repo>:<tag>)
+	ecrImage := fmt.Sprintf("%s/%s:%s", ecrConfig.Registry, repositoryName, imageTag)
+	imageName := fmt.Sprintf("%s:%s", containerName, imageTag) // Define imageName properly
 
-	ecrImage := fmt.Sprintf("%s:%s", ecrConfig.Registry, tag)
-
-	// Save the image to a tar file
-	fmt.Println("Saving image to tar file...")
-	cmd := exec.Command("docker", "save", "-o", imageName+".tar", imageName)
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("failed to save image to tar file: %v", err)
+	// Step 1: Commit the running container to create a new image
+	fmt.Println("Creating image from container...")
+	commitCmd := exec.Command("docker", "commit", containerName, imageName)
+	if output, err := commitCmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("failed to commit container to image: %v, output: %s", err, output)
 	}
 
-	// Load the image back from the tar file
-	fmt.Println("Loading image from tar file...")
-	cmd = exec.Command("docker", "load", "-i", imageName+".tar")
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("failed to load image from tar file: %v", err)
-	}
-
-	// Tag the image for ECR
+	// Step 2: Tag the image for ECR
 	fmt.Println("Tagging image for ECR...")
-	cmd = exec.Command("docker", "tag", imageName, ecrImage)
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("failed to tag image: %v", err)
+	tagCmd := exec.Command("docker", "tag", imageName, ecrImage)
+	if output, err := tagCmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("failed to tag image: %v, output: %s", err, output)
 	}
 
-	// Get ECR login password
+	// Step 3: Get the ECR login password
 	fmt.Println("Getting ECR login password...")
-	cmd = exec.Command("aws", "ecr", "get-login-password", "--region", ecrConfig.Region)
-	password, err := cmd.Output()
+	loginPasswordCmd := exec.Command("aws", "ecr", "get-login-password", "--region", ecrConfig.Region)
+	password, err := loginPasswordCmd.Output()
 	if err != nil {
 		return fmt.Errorf("failed to get ECR login password: %v", err)
 	}
 
-	// Login to ECR
+	// Step 4: Login to ECR
 	fmt.Println("Logging into ECR...")
-	cmd = exec.Command("docker", "login", "--username", ecrConfig.Username, "--password-stdin", ecrConfig.Registry)
-	cmd.Stdin = strings.NewReader(string(password))
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("failed to login to ECR: %v", err)
+	loginCmd := exec.Command("docker", "login", "--username", "AWS", "--password-stdin", ecrConfig.Registry)
+	loginCmd.Stdin = strings.NewReader(string(password))
+	if output, err := loginCmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("failed to login to ECR: %v, output: %s", err, output)
 	}
 
-	// Push the image to ECR
+	// Step 5: Push the image to ECR
 	fmt.Println("Pushing image to ECR...")
-	cmd = exec.Command("docker", "push", ecrImage)
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("failed to push image to ECR: %v", err)
+	pushCmd := exec.Command("docker", "push", ecrImage)
+	if output, err := pushCmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("failed to push image to ECR: %v, output: %s", err, output)
 	}
 
 	fmt.Println("Image successfully pushed to ECR:", ecrImage)

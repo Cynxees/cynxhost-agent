@@ -102,11 +102,11 @@ type TblParameter struct {
 }
 
 type TblPersistentNodeImage struct {
-	Id               int                        `gorm:"primaryKey" json:"id"`
-	PersistentNodeId int                        `gorm:"not null;unique" json:"persistent_node_id"`
-	ImageTag         string                     `gorm:"size:255" json:"image_tag"`
-	Status           types.PersistentNodeStatus `gorm:"size:255;not null" json:"status"`
-	CreatedDate      time.Time                  `gorm:"autoCreateTime" json:"created_date"`
-	UpdatedDate      time.Time                  `gorm:"autoUpdateTime" json:"updated_date"`
-	PersistentNode   TblPersistentNode          `gorm:"foreignKey:PersistentNodeId" json:"persistent_node"`
+	Id               int                             `gorm:"primaryKey" json:"id"`
+	PersistentNodeId int                             `gorm:"not null;unique" json:"persistent_node_id"`
+	ImageTag         string                          `gorm:"size:255" json:"image_tag"`
+	Status           types.PersistentNodeImageStatus `gorm:"size:255;not null" json:"status"`
+	CreatedDate      time.Time                       `gorm:"autoCreateTime" json:"created_date"`
+	UpdatedDate      time.Time                       `gorm:"autoUpdateTime" json:"updated_date"`
+	PersistentNode   TblPersistentNode               `gorm:"foreignKey:PersistentNodeId" json:"persistent_node"`
 }

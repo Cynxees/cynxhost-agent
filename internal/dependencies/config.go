@@ -75,7 +75,9 @@ type Config struct {
 	} `mapstructure:"logging"`
 
 	Aws struct {
-		Ecr EcrConfig `mapstructure:"ecr"`
+		AccessKeyId     string    `mapstructure:"accessKeyId"`
+		AccessKeySecret string    `mapstructure:"accessKeySecret"`
+		Ecr             EcrConfig `mapstructure:"ecr"`
 	} `mapstructure:"aws"`
 
 	Security struct {
@@ -119,10 +121,11 @@ type DockerConfig struct {
 }
 
 type EcrConfig struct {
-	Region   string `mapstructure:"region"`
-	Username string `mapstructure:"username"`
-	Password string `mapstructure:"password"`
-	Registry string `mapstructure:"registry"`
+	Region           string `mapstructure:"region"`
+	Username         string `mapstructure:"username"`
+	Password         string `mapstructure:"password"`
+	Registry         string `mapstructure:"registry"`
+	RepositoryPrefix string `mapstructure:"repositoryPrefix"`
 }
 
 func (config *Config) LazyLoadConfig(tblInstance database.TblInstance, tblPersistentNode database.TblPersistentNode) Config {

@@ -90,6 +90,12 @@ func NewHttpServer(app *app.App) (*HttpServer, error) {
 	handleDefaultRouterFunc("persistent-node/dashboard/files/upload-file", persistentNodeController.UploadFile, false)
 	handleDefaultRouterFunc("persistent-node/dashboard/files/remove-file", persistentNodeController.RemoveFile, false)
 	handleDefaultRouterFunc("persistent-node/dashboard/files/list-directory", persistentNodeController.ListDirectory, false)
+	handleDefaultRouterFunc("persistent-node/dashboard/files/create-directory", persistentNodeController.CreateDirectory, false)
+	handleDefaultRouterFunc("persistent-node/dashboard/files/remove-directory", persistentNodeController.RemoveDirectory, false)
+
+	// Images
+	handleDefaultRouterFunc("persistent-node/dashboard/images/push", persistentNodeController.PushImage, false)
+	handleDefaultRouterFunc("persistent-node/dashboard/images/list", persistentNodeController.ListImages, false)
 
 	// Server Properties
 	// handleDefaultRouterFunc("persistent-node/dashboard/properties/get", persistentNodeController.GetServerProperties, false)
